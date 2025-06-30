@@ -456,6 +456,9 @@ global-settings:
     allow-multiple-custom-enchants: false
     allow-with-vanilla-enchants: true
     require-compatible-item: true
+  enchant-application:
+    allow-replace-different: false
+    prevent-creative-duplication: true
 
   # Visual effects
   visual-effects:

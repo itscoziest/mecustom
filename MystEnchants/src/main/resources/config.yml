@@ -20,6 +20,23 @@ settings:
   debug: false
   auto-save-interval: 300 # seconds
 
+
+# Soul Shop Auto-Unlock Settings
+soul-shop:
+  # Automatically unlock level 1 enchants when purchased from soul shop
+  auto-unlock-level-1: true
+
+  # Auto-unlock settings
+  auto-unlock:
+    # Send message when auto-unlocking
+    send-unlock-message: true
+
+    # Play sound when auto-unlocking
+    play-unlock-sound: true
+
+    # Sound to play
+    unlock-sound: "BLOCK_ENCHANTMENT_TABLE_USE"
+
 # Messages Settings
 messages:
   prefix: "&8[&6MystEnchants&8] "
@@ -59,6 +76,14 @@ messages:
   enchant-apply-no-compatible: "&cCannot apply {enchant} to {item}!"
   enchant-apply-compatible-items: "&7Compatible items: &f{items}"
   enchant-apply-success: "&a&l✓ APPLIED! &7{enchant} Level {level} → {item}"
+  enchant-repurchase-success: "&aYou purchased another {enchant} Level {level} Dye for {cost} souls!"
+
+  enchant-requirements-not-met: "&cYou don't meet the requirements for this enchant level!"
+  enchant-check-oracle: "&7Check the Oracle for requirement details."
+  souls-needed-detail: "&cYou need &6{cost} &csouls but only have &6{current}&c!"
+  enchant-dye-instruction: "&eDrag and drop the dye onto a compatible item to apply the enchant!"
+  soul-transaction-failed: "&cFailed to remove souls from your account!"
+  purchase-error: "&cError processing purchase: {error}"
 
   # Soul Shop Status Messages
   soul-shop-owned: "&cYou already own this enchant level!"
@@ -132,6 +157,13 @@ messages:
   perk-worthy-sacrifice-health-display: "&7The witch's health will display above it."
   perk-worthy-sacrifice-destroyed: "&5Your guardian witch has been destroyed!"
   perk-worthy-sacrifice-fallen: "&5Your guardian witch has fallen!"
+
+
+sounds:
+  purchase-success: "ENTITY_PLAYER_LEVELUP"
+  purchase-fail: "ENTITY_VILLAGER_NO"
+  enchant-unlock: "BLOCK_ENCHANTMENT_TABLE_USE"
+
 
 # GUI Settings
 gui:

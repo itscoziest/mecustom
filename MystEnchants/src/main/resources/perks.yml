@@ -537,3 +537,186 @@ perk-shop-layout:
   tradeoff-egg: 14
   worthy-sacrifice: 15
   lovestruck: 16
+
+
+perks:
+  teleport-snowball:
+    material: SNOWBALL
+    display-name: "&b&lTeleport Snowball"
+    cost: 150
+    cooldown: 30
+    lore:
+      - "&7Teleport to the player you hit"
+      - "&7with this snowball"
+      - ""
+      - "&7Cooldown: &f{cooldown}s"
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  grappling-hook:
+    material: FISHING_ROD
+    display-name: "&a&lGrappling Hook"
+    cost: 200
+    cooldown: 25
+    hook-time: 5
+    pull-strength: 2.0
+    max-distance: 30
+    lore:
+      - "&7Hook onto players and pull"
+      - "&7them towards you for {hook-time}s"
+      - ""
+      - "&7Cooldown: &f{cooldown}s"
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  snowman-egg:
+    material: PUMPKIN
+    display-name: "&f&lSnowman Egg"
+    cost: 175
+    cooldown: 45
+    duration: 15
+    attack-range: 10
+    slow-duration: 3
+    slow-amplifier: 1
+    snowman-health: 20
+    attack-interval: 1.5
+    lore:
+      - "&7Spawns a snowman that attacks"
+      - "&7enemies for {duration}s"
+      - ""
+      - "&7Cooldown: &f{cooldown}s"
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  spellbreaker:
+    material: BLAZE_ROD
+    display-name: "&6&lSpellbreaker"
+    cost: 250
+    cooldown: 60
+    required-hits: 5
+    effect-duration: 5
+    reset-on-damage: true
+    lore:
+      - "&7Hit a player {hits} times to remove"
+      - "&7their potion effects for {effect-duration}s"
+      - ""
+      - "&7Cooldown: &f{cooldown}s"
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  tradeoff-egg:
+    material: EGG
+    display-name: "&e&lTradeoff Egg"
+    cost: 300
+    cooldown: 90
+    lock-duration: 5
+    lore:
+      - "&7Switch potion effects with"
+      - "&7target for {lock-duration}s"
+      - ""
+      - "&7Cooldown: &f{cooldown}s"
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  worthy-sacrifice:
+    material: WITCH_SPAWN_EGG
+    display-name: "&5&lWorthy Sacrifice"
+    cost: 400
+    cooldown: 120
+    witch-health: 300
+    damage-transfer: 100
+    follow-range: 15
+    healthbar:
+      enabled: true
+      format: "&5&l❤ &fWitch Health: &c{health}&f/&c{max-health}"
+      update-interval: 10
+    lore:
+      - "&7Spawns a witch with {health} HP"
+      - "&7that absorbs your damage"
+      - ""
+      - "&7Cooldown: &f{cooldown}s"
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  lovestruck:
+    material: ROSE_BUSH
+    display-name: "&d&lLovestruck"
+    cost: 350
+    cooldown: 75
+    required-hits: 5
+    nausea-duration: 3
+    rose-duration: 3
+    nausea-amplifier: 2
+    reset-on-damage: true
+    lore:
+      - "&7Hit a player {hits} times to give"
+      - "&7nausea and rose inventory for {rose-duration}s"
+      - ""
+      - "&7Cooldown: &f{cooldown}s"
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+# Sound effects for perks (fully configurable)
+perk-effects:
+  teleport-snowball:
+    use-sound: "ENTITY_ENDERMAN_TELEPORT"
+    use-volume: 1.0
+    use-pitch: 1.2
+    success-sound: "BLOCK_NOTE_BLOCK_BELL"
+    success-volume: 1.0
+    success-pitch: 1.5
+
+  grappling-hook:
+    throw-sound: "ENTITY_FISHING_BOBBER_THROW"
+    throw-volume: 1.0
+    throw-pitch: 1.0
+    hook-sound: "BLOCK_ANVIL_LAND"
+    hook-volume: 0.8
+    hook-pitch: 1.5
+
+  snowman-egg:
+    spawn-sound: "ENTITY_SNOW_GOLEM_AMBIENT"
+    spawn-volume: 1.0
+    spawn-pitch: 1.0
+    attack-sound: "ENTITY_SNOWBALL_THROW"
+    attack-volume: 0.8
+    attack-pitch: 1.2
+
+  spellbreaker:
+    hit-sound: "ENTITY_PLAYER_ATTACK_CRIT"
+    hit-volume: 0.8
+    hit-pitch: 1.3
+    activate-sound: "ENTITY_WITCH_DRINK"
+    activate-volume: 1.0
+    activate-pitch: 0.8
+
+  tradeoff-egg:
+    throw-sound: "ENTITY_EGG_THROW"
+    throw-volume: 1.0
+    throw-pitch: 1.0
+    activate-sound: "ENTITY_WITCH_AMBIENT"
+    activate-volume: 1.0
+    activate-pitch: 1.2
+
+  worthy-sacrifice:
+    spawn-sound: "ENTITY_WITCH_AMBIENT"
+    spawn-volume: 1.0
+    spawn-pitch: 0.8
+    damage-transfer-sound: "ENTITY_PLAYER_HURT"
+    damage-transfer-volume: 0.6
+    damage-transfer-pitch: 1.5
+
+  lovestruck:
+    hit-sound: "ENTITY_PLAYER_ATTACK_SWEEP"
+    hit-volume: 0.8
+    hit-pitch: 1.4
+    activate-sound: "ENTITY_VILLAGER_CELEBRATE"
+    activate-volume: 1.0
+    activate-pitch: 1.8

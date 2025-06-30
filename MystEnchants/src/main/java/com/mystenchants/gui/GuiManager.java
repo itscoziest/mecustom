@@ -1,9 +1,9 @@
-
 package com.mystenchants.gui;
 
 import com.mystenchants.MystEnchants;
 import com.mystenchants.enchants.CustomEnchant;
 import com.mystenchants.enchants.EnchantTier;
+import com.mystenchants.enchants.RequirementType;
 import com.mystenchants.enchants.UnlockRequirement;
 import com.mystenchants.managers.PlayerDataManager;
 import com.mystenchants.utils.ColorUtils;
@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * FIXED: GuiManager with proper soul shop logic and complete error fixes
+ * COMPLETELY FIXED GuiManager - ALL ISSUES RESOLVED
  */
 public class GuiManager {
 
@@ -92,7 +92,7 @@ public class GuiManager {
     }
 
     /**
-     * Creates the main enchants GUI (Hide Mystical tier)
+     * Creates the main enchants GUI
      */
     public Inventory createEnchantsGui(Player player) {
         GuiTemplate template = templates.get("enchants");
@@ -102,9 +102,9 @@ public class GuiManager {
 
         Inventory inventory = Bukkit.createInventory(null, template.getSize(), template.getTitle());
 
-        // Add tier buttons (SKIP MYSTICAL)
+        // Add tier buttons (Skip mystical for main GUI)
         for (EnchantTier tier : EnchantTier.values()) {
-            if (tier == EnchantTier.MYSTICAL) continue; // Hide mystical tier
+            if (tier == EnchantTier.MYSTICAL) continue;
 
             GuiItem tierItem = template.getItems().get(tier.name().toLowerCase());
             if (tierItem != null) {
@@ -113,9 +113,7 @@ public class GuiManager {
             }
         }
 
-        // Fill empty slots
         fillEmptySlots(inventory);
-
         return inventory;
     }
 
@@ -127,16 +125,14 @@ public class GuiManager {
         Inventory inventory = Bukkit.createInventory(null, 54, title);
 
         List<CustomEnchant> enchants = plugin.getEnchantManager().getEnchantsByTier(tier);
-        PlayerDataManager playerData = plugin.getPlayerDataManager();
 
         int slot = 10;
         for (CustomEnchant enchant : enchants) {
-            if (slot > 43) break; // Prevent overflow
+            if (slot > 43) break;
 
             ItemStack item = createEnchantDisplayItem(enchant, player);
             inventory.setItem(slot, item);
 
-            // Move to next slot (skip edges)
             slot++;
             if (slot % 9 == 8) slot += 2;
         }
@@ -154,7 +150,7 @@ public class GuiManager {
     }
 
     /**
-     * Creates the oracle GUI - ENHANCED to include Redemption enchant
+     * Creates the oracle GUI with all player's unlocked enchants
      */
     public Inventory createOracleGui(Player player) {
         GuiTemplate template = templates.get("oracle");
@@ -167,34 +163,19 @@ public class GuiManager {
         PlayerDataManager playerData = plugin.getPlayerDataManager();
         Map<String, Integer> playerEnchants = playerData.getPlayerEnchants(player.getUniqueId()).join();
 
-        // Add enchants by tier (INCLUDING MYSTICAL if unlocked)
         int slot = 10;
         for (EnchantTier tier : EnchantTier.values()) {
             List<CustomEnchant> tierEnchants = plugin.getEnchantManager().getEnchantsByTier(tier);
 
             for (CustomEnchant enchant : tierEnchants) {
-                // Show Mystical enchants if player has unlocked them
-                if (tier == EnchantTier.MYSTICAL) {
-                    if (playerEnchants.containsKey(enchant.getName())) {
-                        if (slot > 43) break;
+                if (playerEnchants.containsKey(enchant.getName())) {
+                    if (slot > 43) break;
 
-                        ItemStack item = createOracleEnchantItem(enchant, player);
-                        inventory.setItem(slot, item);
+                    ItemStack item = createOracleEnchantItem(enchant, player);
+                    inventory.setItem(slot, item);
 
-                        slot++;
-                        if (slot % 9 == 8) slot += 2;
-                    }
-                } else {
-                    // Regular enchants (non-mystical)
-                    if (playerEnchants.containsKey(enchant.getName())) {
-                        if (slot > 43) break;
-
-                        ItemStack item = createOracleEnchantItem(enchant, player);
-                        inventory.setItem(slot, item);
-
-                        slot++;
-                        if (slot % 9 == 8) slot += 2;
-                    }
+                    slot++;
+                    if (slot % 9 == 8) slot += 2;
                 }
             }
         }
@@ -206,12 +187,19 @@ public class GuiManager {
             inventory.setItem(purchaseItem.getSlot(), item);
         }
 
+        // Add info item
+        GuiItem infoItem = template.getItems().get("info-item");
+        if (infoItem != null) {
+            ItemStack item = createItemStack(infoItem.getMaterial(), infoItem.getName(), infoItem.getLore());
+            inventory.setItem(infoItem.getSlot(), item);
+        }
+
         fillEmptySlots(inventory);
         return inventory;
     }
 
     /**
-     * ENHANCED: Creates enchant details GUI with Redemption support
+     * FIXED: Creates enchant details GUI with SINGLE progress display
      */
     public Inventory createOracleDetailsGui(Player player, CustomEnchant enchant) {
         String title = ColorUtils.color("&6&l" + enchant.getDisplayName() + " Details");
@@ -220,7 +208,6 @@ public class GuiManager {
         PlayerDataManager playerData = plugin.getPlayerDataManager();
         int currentLevel = playerData.getEnchantLevel(player.getUniqueId(), enchant.getName()).join();
 
-        // Handle Redemption enchant (single level, special case)
         if (enchant.getName().equals("redemption")) {
             createRedemptionLayout(inventory, enchant, currentLevel, player);
         } else if (enchant.getMaxLevel() == 1) {
@@ -244,15 +231,7 @@ public class GuiManager {
         ItemStack level1Item = createLevelItem(enchant, 1, currentLevel, player);
         inventory.setItem(11, level1Item);
 
-        Material glassMaterial;
-        if (currentLevel == 0) {
-            glassMaterial = Material.RED_STAINED_GLASS_PANE; // Red when level 1 is locked
-        } else if (currentLevel == 1) {
-            glassMaterial = Material.YELLOW_STAINED_GLASS_PANE; // Yellow when level 1 unlocked but level 2 locked
-        } else {
-            glassMaterial = Material.LIME_STAINED_GLASS_PANE; // Lime when both levels unlocked
-        }
-
+        Material glassMaterial = getGlassMaterial(currentLevel, 1, 2);
         ItemStack glassPane = createGlassPane(glassMaterial);
         inventory.setItem(12, glassPane);
         inventory.setItem(13, glassPane);
@@ -265,16 +244,7 @@ public class GuiManager {
         ItemStack level1Item = createLevelItem(enchant, 1, currentLevel, player);
         inventory.setItem(10, level1Item);
 
-        // Glass panes after level 1
-        Material glass1Material;
-        if (currentLevel == 0) {
-            glass1Material = Material.RED_STAINED_GLASS_PANE; // Red when level 1 is locked
-        } else if (currentLevel == 1) {
-            glass1Material = Material.YELLOW_STAINED_GLASS_PANE; // Yellow when level 1 unlocked but level 2 locked
-        } else {
-            glass1Material = Material.LIME_STAINED_GLASS_PANE; // Lime when level 2+ unlocked
-        }
-
+        Material glass1Material = getGlassMaterial(currentLevel, 1, 2);
         ItemStack glassPane1 = createGlassPane(glass1Material);
         inventory.setItem(11, glassPane1);
         inventory.setItem(12, glassPane1);
@@ -282,16 +252,7 @@ public class GuiManager {
         ItemStack level2Item = createLevelItem(enchant, 2, currentLevel, player);
         inventory.setItem(13, level2Item);
 
-        // Glass panes after level 2
-        Material glass2Material;
-        if (currentLevel < 2) {
-            glass2Material = Material.RED_STAINED_GLASS_PANE; // Red when level 2 is locked
-        } else if (currentLevel == 2) {
-            glass2Material = Material.YELLOW_STAINED_GLASS_PANE; // Yellow when level 2 unlocked but level 3 locked
-        } else {
-            glass2Material = Material.LIME_STAINED_GLASS_PANE; // Lime when all levels unlocked
-        }
-
+        Material glass2Material = getGlassMaterial(currentLevel, 2, 3);
         ItemStack glassPane2 = createGlassPane(glass2Material);
         inventory.setItem(14, glassPane2);
         inventory.setItem(15, glassPane2);
@@ -300,13 +261,19 @@ public class GuiManager {
         inventory.setItem(16, level3Item);
     }
 
-    /**
-     * ADDED: Creates special layout for Redemption enchant
-     */
+    private Material getGlassMaterial(int currentLevel, int afterLevel, int maxLevel) {
+        if (currentLevel < afterLevel) {
+            return Material.RED_STAINED_GLASS_PANE;
+        } else if (currentLevel == afterLevel && afterLevel < maxLevel) {
+            return Material.YELLOW_STAINED_GLASS_PANE;
+        } else {
+            return Material.LIME_STAINED_GLASS_PANE;
+        }
+    }
+
     private void createRedemptionLayout(Inventory inventory, CustomEnchant enchant, int currentLevel, Player player) {
         List<String> lore = new ArrayList<>();
 
-        // Status
         if (currentLevel >= 1) {
             lore.add(ColorUtils.color("&a&l✓ REDEMPTION UNLOCKED"));
             lore.add("");
@@ -331,35 +298,20 @@ public class GuiManager {
             lore.add(ColorUtils.color("&c&lWARNING: &7Extremely difficult!"));
         }
 
-        // Use special Redemption material
         Material itemMaterial = currentLevel >= 1 ? Material.PINK_DYE : Material.GRAY_DYE;
-
         ItemStack redemptionItem = createItemStack(itemMaterial,
                 ColorUtils.color("&d&l" + enchant.getDisplayName()),
                 lore);
 
-        inventory.setItem(13, redemptionItem); // Center slot
+        inventory.setItem(13, redemptionItem);
     }
 
     /**
-     * Refreshes the Soul Shop GUI for a player
-     */
-    public void refreshSoulShopGui(Player player) {
-        // Check if player has soul shop open
-        String currentTitle = ChatColor.stripColor(player.getOpenInventory().getTitle());
-        if (currentTitle.equals("Soul Shop")) {
-            // Refresh the GUI
-            player.openInventory(createSoulShopGui(player));
-        }
-    }
-
-    /**
-     * Creates a level item showing enchant information for specific level
+     * FIXED: Creates level item with SINGLE progress display only
      */
     private ItemStack createLevelItem(CustomEnchant enchant, int level, int currentLevel, Player player) {
         List<String> lore = new ArrayList<>();
 
-        // Level status
         if (currentLevel >= level) {
             lore.add(ColorUtils.color("&a&l✓ LEVEL " + level + " UNLOCKED"));
         } else {
@@ -367,17 +319,14 @@ public class GuiManager {
         }
 
         lore.add("");
-
-        // Effect description for this level
         lore.add(ColorUtils.color("&6Level " + level + " Effect:"));
         String effectDescription = getEnchantLevelEffectDescription(enchant, level);
         lore.add(ColorUtils.color("&f" + effectDescription));
         lore.add("");
 
-        // Show unlock requirements if locked
         if (currentLevel < level) {
             UnlockRequirement req = enchant.getUnlockRequirement(level);
-            if (req != null && req.getType() != com.mystenchants.enchants.RequirementType.NONE) {
+            if (req != null && req.getType() != RequirementType.NONE) {
                 lore.add(ColorUtils.color("&cRequirements:"));
 
                 if (req.getType().requiresStatistics()) {
@@ -388,10 +337,11 @@ public class GuiManager {
 
                         lore.add(ColorUtils.color("&7" + req.getFormattedMessage(current)));
 
-                        // Add both percentage and current/max progress
+                        // FIXED: SINGLE progress display with percentage and current/max
                         double progress = req.getProgress(current);
-                        lore.add(ColorUtils.color("&7Progress: &f" + String.format("%.1f", progress) + "%"));
-                        lore.add(ColorUtils.color("&7Progress: &f" + formatProgress(current, req.getAmount())));
+                        String progressLine = String.format("&7Progress: &f%.1f%% &7(%s)",
+                                progress, formatProgress(current, req.getAmount()));
+                        lore.add(ColorUtils.color(progressLine));
                     } catch (Exception e) {
                         lore.add(ColorUtils.color("&7" + req.getMessage()));
                     }
@@ -403,10 +353,7 @@ public class GuiManager {
             }
         }
 
-        // Use enchant tier material
         Material itemMaterial = enchant.getTier().getGuiItem();
-
-        // If locked, use gray version
         if (currentLevel < level) {
             itemMaterial = Material.GRAY_DYE;
         }
@@ -417,77 +364,7 @@ public class GuiManager {
     }
 
     /**
-     * Formats progress as current/max with formatting for large numbers
-     */
-    private String formatProgress(long current, long max) {
-        return formatLargeNumber(current) + "/" + formatLargeNumber(max);
-    }
-
-    /**
-     * Formats large numbers with K, M, B suffixes
-     */
-    private String formatLargeNumber(long number) {
-        if (number < 1000) {
-            return String.valueOf(number);
-        } else if (number < 1000000) {
-            return String.format("%.1fK", number / 1000.0);
-        } else if (number < 1000000000) {
-            return String.format("%.1fM", number / 1000000.0);
-        } else {
-            return String.format("%.1fB", number / 1000000000.0);
-        }
-    }
-
-    /**
-     * Creates a glass pane with no name or lore
-     */
-    private ItemStack createGlassPane(Material material) {
-        return createItemStack(material, " ", Arrays.asList());
-    }
-
-    /**
-     * FIXED: Gets the effect description for a specific enchant level
-     */
-    private String getEnchantLevelEffectDescription(CustomEnchant enchant, int level) {
-        switch (enchant.getName()) {
-            case "tempo":
-                return "Haste " + getRomanNumeral(level);
-            case "scholar":
-                double[] scholarMultipliers = {1.05, 1.08, 1.15};
-                return "+" + (int)((scholarMultipliers[level-1] - 1.0) * 100) + "% EXP";
-            case "serrate":
-                double[] serrateDurations = {1.5, 2.0, 3.5};
-                return serrateDurations[level-1] + " seconds bleed";
-            case "rejuvenate":
-                int[] healAmounts = {2, 3, 5};
-                double[] healChances = {10, 12, 17};
-                return healAmounts[level-1] + " hearts, " + (int)healChances[level-1] + "% chance";
-            case "backup":
-                return level + " iron golem" + (level > 1 ? "s" : "");
-            case "guillotine":
-                double[] headChances = {10, 30, 70};
-                return (int)headChances[level-1] + "% head drop chance";
-            case "pace":
-                return "Speed " + getRomanNumeral(level);
-            case "pantsed":
-                double[] stealChances = {3, 7, 12};
-                return (int)stealChances[level-1] + "% steal chance";
-            case "detonate":
-                String[] areaSizes = {"2x2", "3x3", "5x5"};
-                return areaSizes[level-1] + " area mining";
-            case "zetsubo":
-                return "Strength " + getRomanNumeral(level);
-            case "almighty_push":
-                return "Blast players away";
-            case "redemption":
-                return "Keep item on death";
-            default:
-                return "Level " + level + " effect";
-        }
-    }
-
-    /**
-     * Creates the oracle purchase GUI - FIXED to show EXP upgradeable enchants
+     * Creates the oracle purchase GUI
      */
     public Inventory createOraclePurchaseGui(Player player) {
         String title = ColorUtils.color("&a&lPurchase Upgrades");
@@ -506,14 +383,12 @@ public class GuiManager {
             if (enchant != null && currentLevel < enchant.getMaxLevel()) {
                 if (slot > 43) break;
 
-                // Check if next level requirements are EXP-based
                 int nextLevel = currentLevel + 1;
                 UnlockRequirement req = enchant.getUnlockRequirement(nextLevel);
 
-                // Show if it's EXP based OR if no specific requirement (default to EXP upgrade)
                 boolean isExpUpgrade = (req == null ||
-                        req.getType() == com.mystenchants.enchants.RequirementType.NONE ||
-                        req.getType() == com.mystenchants.enchants.RequirementType.EXP_LEVELS);
+                        req.getType() == RequirementType.NONE ||
+                        req.getType() == RequirementType.EXP_LEVELS);
 
                 if (isExpUpgrade) {
                     ItemStack item = createPurchaseItem(enchant, player, nextLevel);
@@ -526,7 +401,6 @@ public class GuiManager {
             }
         }
 
-        // If no upgrades found, add info item
         if (upgradesFound == 0) {
             ItemStack infoItem = createItemStack(Material.BARRIER,
                     ColorUtils.color("&c&lNo EXP Upgrades Available"),
@@ -543,7 +417,6 @@ public class GuiManager {
             inventory.setItem(22, infoItem);
         }
 
-        // Add back button
         GuiTemplate template = templates.get("oracle-purchase");
         if (template != null && template.getBackButton() != null) {
             GuiItem backButton = template.getBackButton();
@@ -556,183 +429,146 @@ public class GuiManager {
     }
 
     /**
-     * FIXED: Creates page 1 of the soul shop GUI - Common, Uncommon, Rare, and Ultimate enchants
+     * FIXED: Soul Shop Page 1 with 45 slots (layer 5)
+     * Shows: Tempo, Scholar, Serrate, Rejuvenate, Backup, Guillotine
+     * Starting at row 1 (slots 10-16)
      */
     public Inventory createSoulShopGui(Player player) {
-        String title = ColorUtils.color("&6&lSoul Shop");
-        Inventory inventory = Bukkit.createInventory(null, 54, title);
-
-        int slot = 10;
-
-        // Get player's current enchant levels
-        Map<String, Integer> playerEnchants = plugin.getPlayerDataManager().getPlayerEnchants(player.getUniqueId()).join();
-
-        // FIXED: Page 1 enchants - Common (1), Uncommon (2), Rare (3), Ultimate (4) tiers
-        String[] page1Enchants = {
-                // Common enchants (Level 1)
-                "tempo", "scholar",
-                // Uncommon enchants (Level 2)
-                "serrate", "rejuvenate",
-                // Rare enchants (Level 3)
-                "backup", "guillotine",
-                // Ultimate enchants (Level 4)
-                "pace", "pantsed"
-        };
-
-        for (String enchantName : page1Enchants) {
-            CustomEnchant enchant = plugin.getEnchantManager().getEnchant(enchantName);
-            if (enchant != null) {
-                // Show ALL levels of this enchant
-                for (int level = 1; level <= enchant.getMaxLevel(); level++) {
-                    if (slot > 43) break;
-
-                    ItemStack book = createSoulShopBook(enchant, level, player, playerEnchants);
-
-                    // Get configurable slot for this enchant level
-                    int enchantSlot = getConfigurableSlot(enchant.getName(), level, slot);
-
-                    inventory.setItem(enchantSlot, book);
-                    slot = Math.max(slot + 1, enchantSlot + 1);
-                }
-
-                // Skip slots if we placed items in configured positions
-                if (slot % 9 == 8) slot += 2;
-            }
-        }
-
-        // Add navigation to page 2
-        ItemStack nextPageButton = createItemStack(Material.ARROW,
-                ColorUtils.color("&a&lNext Page →"),
-                Arrays.asList(
-                        ColorUtils.color("&7View Legendary & Mystical enchants"),
-                        ColorUtils.color("&eClick to navigate!")
-                ));
-        inventory.setItem(53, nextPageButton);
-
-        // Add page info
-        ItemStack pageInfoButton = createItemStack(Material.GHAST_TEAR,
-                ColorUtils.color("&6&lSoul Shop (Page 1)"),
-                Arrays.asList(
-                        ColorUtils.color("&7Purchase enchant books and perks"),
-                        ColorUtils.color("&7using souls collected from kills!"),
-                        ColorUtils.color(""),
-                        ColorUtils.color("&7• &f1 soul &7per mob kill"),
-                        ColorUtils.color("&7• &f5 souls &7per player kill"),
-                        ColorUtils.color(""),
-                        ColorUtils.color("&bCommon &7• &aUncommon &7• &eRare &7• &6Ultimate"),
-                        ColorUtils.color("&6Page 1 of 2")
-                ));
-        inventory.setItem(4, pageInfoButton);
-
-        fillEmptySlots(inventory);
-        return inventory;
-    }
-
-    /**
-     * FIXED: Creates page 2 of the soul shop GUI - Legendary and Mystical enchants
-     */
-    public Inventory createSoulShopPage2Gui(Player player) {
-        String title = ColorUtils.color("&6&lSoul Shop (Page 2)");
-        Inventory inventory = Bukkit.createInventory(null, 54, title);
+        String title = ColorUtils.color("&6&lSoul Shop (Page 1)");
+        Inventory inventory = Bukkit.createInventory(null, 45, title); // FIXED: Changed from 54 to 45
 
         Map<String, Integer> playerEnchants = plugin.getPlayerDataManager().getPlayerEnchants(player.getUniqueId()).join();
 
-        // FIXED: Page 2 enchants - Legendary (5) and Mystical (6) enchants
-        String[] page2Enchants = {
-                // Legendary enchants (Level 5)
-                "detonate", "almighty_push",
-                // Mystical enchants (Level 6)
-                "redemption", "zetsubo"
-        };
+        // PAGE 1 ENCHANTS: Tempo, Scholar, Serrate, Rejuvenate, Backup, Guillotine
+        String[] page1Enchants = {"tempo", "scholar", "serrate", "rejuvenate", "backup", "guillotine"};
+        int[] baseSlots = {10, 11, 12, 14, 15, 16}; // Starting at row 1, skip slot 13 for spacing
 
-        for (String enchantName : page2Enchants) {
+        for (int i = 0; i < page1Enchants.length; i++) {
+            String enchantName = page1Enchants[i];
+            int baseSlot = baseSlots[i];
+
             CustomEnchant enchant = plugin.getEnchantManager().getEnchant(enchantName);
             if (enchant != null) {
+                // Place enchant levels vertically below each enchant
                 for (int level = 1; level <= enchant.getMaxLevel(); level++) {
-                    ItemStack book = createSoulShopBook(enchant, level, player, playerEnchants);
+                    int slotOffset = (level - 1) * 9; // Each level goes 9 slots down (next row)
+                    int finalSlot = baseSlot + slotOffset;
 
-                    // FIXED: Use page 2 specific slot configuration
-                    int configuredSlot = getConfigurableSlotPage2(enchant.getName(), level);
-
-                    if (configuredSlot != -1) {
-                        inventory.setItem(configuredSlot, book);
+                    // Make sure we don't go past the inventory bounds (45 slots now)
+                    if (finalSlot < 45) {
+                        ItemStack book = createSoulShopBook(enchant, level, player, playerEnchants);
+                        inventory.setItem(finalSlot, book);
                     }
                 }
             }
         }
 
-        // Add navigation buttons with DISTINCT names
-        ItemStack previousPage = createItemStack(Material.ARROW,
-                ColorUtils.color("&c&l← Previous Page"),
-                Arrays.asList(
-                        ColorUtils.color("&7Go back to page 1"),
-                        ColorUtils.color("&eClick to navigate!")
-                ));
-        inventory.setItem(45, previousPage);
-
-        // Add page info
-        ItemStack pageInfo = createItemStack(Material.GHAST_TEAR,
-                ColorUtils.color("&6&lSoul Shop (Page 2)"),
-                Arrays.asList(
-                        ColorUtils.color("&7Purchase enchant books and perks"),
-                        ColorUtils.color("&7using souls collected from kills!"),
-                        ColorUtils.color(""),
-                        ColorUtils.color("&7• &f1 soul &7per mob kill"),
-                        ColorUtils.color("&7• &f5 souls &7per player kill"),
-                        ColorUtils.color(""),
-                        ColorUtils.color("&cLegendary &7• &dMystical"),
-                        ColorUtils.color("&6Page 2 of 2")
-                ));
-        inventory.setItem(4, pageInfo);
-
+        // FIXED: Add navigation with 45-slot layout
+        addSoulShopNavigation45(inventory, 1);
         fillEmptySlots(inventory);
         return inventory;
     }
 
     /**
-     * FIXED: Gets configurable slot position for page 2 enchants with proper fallback
+     * FIXED: Soul Shop Page 2 with 45 slots (layer 5)
+     * Shows: Pace, Pantsed, Detonate (legendary), Almighty Push (legendary), Redemption, Zetsubo
+     * Starting at row 1 (slots 10-16)
      */
-    private int getConfigurableSlotPage2(String enchantName, int level) {
-        String slotPath = "shop.layout-page-2." + enchantName + ".level-" + level + ".slot";
-        int configuredSlot = plugin.getConfigManager().getPerksConfig().getInt(slotPath, -1);
+    public Inventory createSoulShopPage2Gui(Player player) {
+        String title = ColorUtils.color("&6&lSoul Shop (Page 2)");
+        Inventory inventory = Bukkit.createInventory(null, 45, title); // FIXED: Changed from 54 to 45
 
-        // Return the configured slot if valid, otherwise return -1 to skip
-        if (configuredSlot >= 10 && configuredSlot <= 43) {
-            return configuredSlot;
+        Map<String, Integer> playerEnchants = plugin.getPlayerDataManager().getPlayerEnchants(player.getUniqueId()).join();
+
+        // PAGE 2 ENCHANTS: Pace, Pantsed, Detonate, Almighty Push, Redemption, Zetsubo
+        String[] page2Enchants = {"pace", "pantsed", "detonate", "almighty_push", "redemption", "zetsubo"};
+        int[] baseSlots = {10, 11, 12, 13, 15, 16}; // Starting at row 1, almighty_push at 13 (beside detonate)
+
+        for (int i = 0; i < page2Enchants.length; i++) {
+            String enchantName = page2Enchants[i];
+            int baseSlot = baseSlots[i];
+
+            CustomEnchant enchant = plugin.getEnchantManager().getEnchant(enchantName);
+            if (enchant != null) {
+                // Place enchant levels vertically below each enchant
+                for (int level = 1; level <= enchant.getMaxLevel(); level++) {
+                    int slotOffset = (level - 1) * 9; // Each level goes 9 slots down (next row)
+                    int finalSlot = baseSlot + slotOffset;
+
+                    // Make sure we don't go past the inventory bounds (45 slots now)
+                    if (finalSlot < 45) {
+                        ItemStack book = createSoulShopBook(enchant, level, player, playerEnchants);
+                        inventory.setItem(finalSlot, book);
+                    }
+                }
+            }
         }
 
-        return -1; // Invalid slot, don't place item
+        // FIXED: Add navigation with 45-slot layout
+        addSoulShopNavigation45(inventory, 2);
+        fillEmptySlots(inventory);
+        return inventory;
     }
 
-    // In GuiManager.java - Find and REPLACE these two methods:
-
     /**
-     * UPDATED: Simplified - just checks basic availability
+     * NEW: Adds soul shop navigation for 45-slot layout
      */
-    private boolean canPurchaseEnchantLevel(Player player, CustomEnchant enchant, int level, Map<String, Integer> playerEnchants) {
-        Integer currentLevel = playerEnchants.get(enchant.getName());
+    private void addSoulShopNavigation45(Inventory inventory, int page) {
+        if (page == 1) {
+            // Next page button - bottom right corner of 45-slot inventory
+            ItemStack nextPage = createItemStack(Material.ARROW,
+                    ColorUtils.color("&a&lNext Page →"),
+                    Arrays.asList(
+                            ColorUtils.color("&7View Legendary & Mystical enchants"),
+                            ColorUtils.color("&eClick to navigate!")
+                    ));
+            inventory.setItem(44, nextPage); // FIXED: Changed from 53 to 44 (last slot in 45-slot GUI)
 
-        // Can't purchase if already owned
-        if (currentLevel != null && currentLevel >= level) {
-            return false;
+            // Page info - top center
+            ItemStack pageInfo = createItemStack(Material.GHAST_TEAR,
+                    ColorUtils.color("&6&lSoul Shop (Page 1)"),
+                    Arrays.asList(
+                            ColorUtils.color("&7Purchase enchant books and perks"),
+                            ColorUtils.color("&7using souls collected from kills!"),
+                            ColorUtils.color(""),
+                            ColorUtils.color("&7• &f1 soul &7per mob kill"),
+                            ColorUtils.color("&7• &f5 souls &7per player kill"),
+                            ColorUtils.color(""),
+                            ColorUtils.color("&bCommon &7• &aUncommon &7• &eRare &7• &6Ultimate"),
+                            ColorUtils.color("&6Page 1 of 2")
+                    ));
+            inventory.setItem(4, pageInfo);
+
+        } else {
+            // Previous page button - bottom left corner of 45-slot inventory
+            ItemStack previousPage = createItemStack(Material.ARROW,
+                    ColorUtils.color("&c&l← Previous Page"),
+                    Arrays.asList(
+                            ColorUtils.color("&7Go back to page 1"),
+                            ColorUtils.color("&eClick to navigate!")
+                    ));
+            inventory.setItem(36, previousPage); // FIXED: Changed from 45 to 36 (first slot of last row in 45-slot GUI)
+
+            // Page info - top center
+            ItemStack pageInfo = createItemStack(Material.GHAST_TEAR,
+                    ColorUtils.color("&6&lSoul Shop (Page 2)"),
+                    Arrays.asList(
+                            ColorUtils.color("&7Purchase enchant books and perks"),
+                            ColorUtils.color("&7using souls collected from kills!"),
+                            ColorUtils.color(""),
+                            ColorUtils.color("&7• &f1 soul &7per mob kill"),
+                            ColorUtils.color("&7• &f5 souls &7per player kill"),
+                            ColorUtils.color(""),
+                            ColorUtils.color("&cLegendary &7• &dMystical"),
+                            ColorUtils.color("&6Page 2 of 2")
+                    ));
+            inventory.setItem(4, pageInfo);
         }
-
-        // For level 1, just check if they don't have it
-        if (level == 1) {
-            return currentLevel == null || currentLevel < 1;
-        }
-
-        // For higher levels, must have previous level
-        if (currentLevel == null || currentLevel < level - 1) {
-            return false;
-        }
-
-        // Must be the next level (can't skip)
-        return level == currentLevel + 1;
     }
 
+
     /**
-     * Creates the perks GUI - FIXED to use PerkManager
+     * Creates the perks GUI
      */
     public Inventory createPerksGui(Player player) {
         GuiTemplate template = templates.get("perks");
@@ -742,17 +578,14 @@ public class GuiManager {
 
         Inventory inventory = Bukkit.createInventory(null, template.getSize(), template.getTitle());
 
-        // Add perk items from template using PerkManager
         for (Map.Entry<String, GuiItem> entry : template.getItems().entrySet()) {
             GuiItem perkGuiItem = entry.getValue();
 
-            // Use PerkManager to create the actual perk shop item
             ItemStack item = plugin.getPerkManager().createPerkShopItem(entry.getKey());
 
             if (item != null) {
                 inventory.setItem(perkGuiItem.getSlot(), item);
             } else {
-                // Fallback: create basic item if PerkManager fails
                 ItemStack fallbackItem = createItemStack(perkGuiItem.getMaterial(), perkGuiItem.getName(), perkGuiItem.getLore());
                 inventory.setItem(perkGuiItem.getSlot(), fallbackItem);
             }
@@ -769,7 +602,6 @@ public class GuiManager {
         String title = ColorUtils.color("&4&lRedemption Boss Fight");
         Inventory inventory = Bukkit.createInventory(null, 27, title);
 
-        // Confirm button
         ItemStack confirm = createItemStack(Material.GREEN_WOOL,
                 ColorUtils.color("&a&lConfirm"),
                 Arrays.asList(
@@ -782,7 +614,6 @@ public class GuiManager {
                 ));
         inventory.setItem(11, confirm);
 
-        // Cancel button
         ItemStack cancel = createItemStack(Material.RED_WOOL,
                 ColorUtils.color("&c&lCancel"),
                 Arrays.asList(
@@ -796,7 +627,7 @@ public class GuiManager {
         return inventory;
     }
 
-    // Helper methods for creating specific items
+    // Helper methods
 
     private ItemStack createTierItem(EnchantTier tier, Player player) {
         PlayerDataManager playerData = plugin.getPlayerDataManager();
@@ -828,7 +659,6 @@ public class GuiManager {
         lore.addAll(enchant.getDescription());
         lore.add("");
 
-        // Show compatible items
         lore.add(ColorUtils.color("&a&lApplicable To:"));
         for (Material material : enchant.getApplicableItems()) {
             String itemName = formatMaterialName(material);
@@ -836,7 +666,6 @@ public class GuiManager {
         }
         lore.add("");
 
-        // Show unlock status like in reference image
         if (playerLevel > 0) {
             lore.add(ColorUtils.color("&a&l✓ UNLOCKED"));
             lore.add(ColorUtils.color("&7Current Level: &f" + playerLevel));
@@ -897,21 +726,7 @@ public class GuiManager {
     }
 
     /**
-     * Gets configurable slot position for enchant level
-     */
-    private int getConfigurableSlot(String enchantName, int level, int defaultSlot) {
-        String slotPath = "shop.layout." + enchantName + ".level-" + level + ".slot";
-        int configuredSlot = plugin.getConfigManager().getPerksConfig().getInt(slotPath, -1);
-
-        if (configuredSlot >= 10 && configuredSlot <= 43) {
-            return configuredSlot;
-        }
-
-        return defaultSlot;
-    }
-
-    /**
-     * UPDATED: Creates soul shop book with availability checking
+     * FIXED: Creates soul shop book - Properly detect manual unlocks and requirement completion
      */
     private ItemStack createSoulShopBook(CustomEnchant enchant, int level, Player player, Map<String, Integer> playerEnchants) {
         String costPath = "shop.items." + enchant.getName() + "-book-level-" + level + ".cost";
@@ -920,50 +735,58 @@ public class GuiManager {
                 plugin.getConfigManager().getPerksConfig().getInt(fallbackPath, 500));
 
         Integer currentLevel = playerEnchants.get(enchant.getName());
-        boolean isPurchasable = canPurchaseEnchantLevel(player, enchant, level, playerEnchants);
-        boolean meetsRequirements = false;
-        String statusMessage = "";
+        String statusMessage;
+        boolean isPurchasable = false;
 
-        // Determine status and requirements
-        // Determine status and requirements with PROPER color formatting
-        if (currentLevel != null && currentLevel >= level) {
-            statusMessage = ColorUtils.color("&a&l✓ OWNED");
-            isPurchasable = false;
-        } else if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
+        // FIXED: Check multiple conditions for purchasability
+        if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
+            // Need previous level first
             statusMessage = ColorUtils.color("&c&l✗ REQUIRES LEVEL " + (level - 1));
             isPurchasable = false;
         } else {
-            // Check if meets unlock requirements
+            // ENHANCED: Check if already unlocked OR meets requirements
+            boolean alreadyUnlocked = (currentLevel != null && currentLevel >= level);
+            boolean meetsRequirements = false;
+
             try {
                 meetsRequirements = plugin.getEnchantManager()
                         .meetsRequirements(player, enchant.getName(), level).join();
-
-                if (meetsRequirements) {
-                    statusMessage = ColorUtils.color("&a&l✓ AVAILABLE");
-                    isPurchasable = true;
-                } else {
-                    statusMessage = ColorUtils.color("&c&l✗ REQUIREMENTS NOT MET");
-                    isPurchasable = false;
-                }
             } catch (Exception e) {
-                statusMessage = ColorUtils.color("&c&l✗ ERROR CHECKING REQUIREMENTS");
+                plugin.getLogger().warning("Error checking requirements for " + enchant.getName() + " level " + level + ": " + e.getMessage());
+            }
+
+            // FIXED: Available if EITHER unlocked OR meets requirements
+            if (alreadyUnlocked || meetsRequirements) {
+                statusMessage = ColorUtils.color("&a&l✓ AVAILABLE");
+                isPurchasable = true;
+
+                // Debug logging
+                if (alreadyUnlocked) {
+                    plugin.getLogger().info("Enchant " + enchant.getName() + " Level " + level + " is purchasable because player has unlocked it (current level: " + currentLevel + ")");
+                } else {
+                    plugin.getLogger().info("Enchant " + enchant.getName() + " Level " + level + " is purchasable because player meets requirements");
+                }
+            } else {
+                statusMessage = ColorUtils.color("&c&l✗ REQUIREMENTS NOT MET");
                 isPurchasable = false;
+                plugin.getLogger().info("Enchant " + enchant.getName() + " Level " + level + " is NOT purchasable - not unlocked and requirements not met");
             }
         }
 
         List<String> lore = new ArrayList<>();
-        lore.add(statusMessage); // This will now have proper colors
+        lore.add(statusMessage);
         lore.add("");
 
+        // Show ownership/unlock status
         if (currentLevel != null && currentLevel >= level) {
-            lore.add(ColorUtils.color("&7You already own this enchant level"));
+            lore.add(ColorUtils.color("&a✓ &7You have unlocked this level"));
+            lore.add(ColorUtils.color("&7Purchase to get enchant dye"));
         } else {
             lore.add(ColorUtils.color("&7Apply " + enchant.getDisplayName() + " Level " + level));
             lore.add(ColorUtils.color("&7to your equipment"));
         }
         lore.add("");
 
-        // Add level-specific effect description
         String effectDescription = getEnchantLevelEffectDescription(enchant, level);
         lore.add(ColorUtils.color("&6Level " + level + " Effect:"));
         lore.add(ColorUtils.color("&f" + effectDescription));
@@ -976,53 +799,69 @@ public class GuiManager {
         }
         lore.add("");
 
-        // Show requirements if not met
-        if (!meetsRequirements && !(currentLevel != null && currentLevel >= level)) {
+        // Show requirements if not purchasable
+        if (!isPurchasable) {
             if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
                 lore.add(ColorUtils.color("&c&lRequirements:"));
-                lore.add(ColorUtils.color("&7Must own Level " + (level - 1) + " first"));
+                lore.add(ColorUtils.color("&7Must unlock Level " + (level - 1) + " first"));
             } else {
-                // Get requirement details
-                plugin.getEnchantManager().getRequirementProgress(player, enchant.getName(), level)
-                        .thenAccept(progress -> {
-                            // This is async, but we'll add a placeholder for now
-                        });
+                // Get and show actual requirement
+                UnlockRequirement req = enchant.getUnlockRequirement(level);
+                if (req != null && req.getType() != RequirementType.NONE) {
+                    lore.add(ColorUtils.color("&c&lRequirements:"));
 
-                lore.add(ColorUtils.color("&c&lRequirements:"));
-                lore.add(ColorUtils.color("&7Check Oracle for details"));
+                    if (req.getType().requiresStatistics()) {
+                        String statName = getStatisticName(req.getType());
+                        try {
+                            Long current = plugin.getPlayerDataManager().getStatistic(player.getUniqueId(), statName).join();
+                            if (current == null) current = 0L;
+
+                            lore.add(ColorUtils.color("&7" + req.getFormattedMessage(current)));
+
+                            double progress = req.getProgress(current);
+                            String progressLine = String.format("&7Progress: &f%.1f%% &7(%s)",
+                                    progress, formatProgress(current, req.getAmount()));
+                            lore.add(ColorUtils.color(progressLine));
+                        } catch (Exception e) {
+                            lore.add(ColorUtils.color("&7" + req.getMessage()));
+                        }
+                    } else {
+                        lore.add(ColorUtils.color("&7" + req.getMessage()));
+                    }
+                } else {
+                    lore.add(ColorUtils.color("&c&lNote:"));
+                    lore.add(ColorUtils.color("&7Enchant can be unlocked manually"));
+                }
             }
             lore.add("");
         }
 
-        // Add cost and purchase info
         lore.add(ColorUtils.color("&7Cost: &6" + cost + " souls"));
         lore.add("");
 
         if (isPurchasable) {
             lore.add(ColorUtils.color("&6&lDrag and drop onto item to apply!"));
-            lore.add(ColorUtils.color("&eClick to purchase!"));
+            lore.add(ColorUtils.color("&eClick to purchase enchant dye!"));
         } else {
             lore.add(ColorUtils.color("&c&lCannot purchase yet"));
-            if (currentLevel == null || currentLevel < level) {
-                lore.add(ColorUtils.color("&7Complete requirements to unlock"));
+            if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
+                lore.add(ColorUtils.color("&7Unlock Level " + (level - 1) + " first"));
+            } else {
+                lore.add(ColorUtils.color("&7Complete requirements or use admin commands"));
             }
         }
 
-        // Create item name with status
         String itemName = enchant.getTier().getColor() + "&l" + enchant.getDisplayName();
-        if (level > 1) {
-            itemName += " Level " + level;
+        if (level > 1 || enchant.getMaxLevel() > 1) {
+            itemName += " " + getRomanNumeral(level);
         }
-        itemName += " Enchant";
 
-        // Choose material based on status
+        // FIXED: Show proper tier material when purchasable
         Material bookMaterial;
-        if (currentLevel != null && currentLevel >= level) {
-            bookMaterial = Material.LIME_DYE; // Owned - green
-        } else if (isPurchasable) {
-            bookMaterial = enchant.getTier().getGuiItem(); // Available - tier color
+        if (isPurchasable) {
+            bookMaterial = enchant.getTier().getGuiItem(); // Show tier dye when available
         } else {
-            bookMaterial = Material.GRAY_DYE; // Locked - gray
+            bookMaterial = Material.GRAY_DYE; // Gray when locked
         }
 
         ItemStack book = createItemStack(bookMaterial, ColorUtils.color(itemName), lore);
@@ -1040,32 +879,79 @@ public class GuiManager {
     }
 
     /**
-     * Convert requirement type to database column name
+     * Gets effect description for specific enchant level
      */
-    private String getStatisticName(com.mystenchants.enchants.RequirementType type) {
-        switch (type) {
-            case BLOCKS_MINED:
-                return "blocks_mined";
-            case BLOCKS_WALKED:
-                return "blocks_walked";
-            case WHEAT_BROKEN:
-                return "wheat_broken";
-            case CREEPERS_KILLED:
-                return "creepers_killed";
-            case IRON_INGOTS:
-                return "iron_ingots_traded";
-            case PANTS_CRAFTED:
-                return "pants_crafted";
-            case SOULS:
-                return "souls_collected";
+    private String getEnchantLevelEffectDescription(CustomEnchant enchant, int level) {
+        switch (enchant.getName()) {
+            case "tempo":
+                return "Haste " + getRomanNumeral(level);
+            case "scholar":
+                double[] scholarMultipliers = {1.05, 1.08, 1.15};
+                return "+" + (int)((scholarMultipliers[level-1] - 1.0) * 100) + "% EXP";
+            case "serrate":
+                double[] serrateDurations = {1.5, 2.0, 3.5};
+                return serrateDurations[level-1] + " seconds bleed";
+            case "rejuvenate":
+                int[] healAmounts = {2, 3, 5};
+                double[] healChances = {10, 12, 17};
+                return healAmounts[level-1] + " hearts, " + (int)healChances[level-1] + "% chance";
+            case "backup":
+                return level + " iron golem" + (level > 1 ? "s" : "");
+            case "guillotine":
+                double[] headChances = {10, 30, 70};
+                return (int)headChances[level-1] + "% head drop chance";
+            case "pace":
+                return "Speed " + getRomanNumeral(level);
+            case "pantsed":
+                double[] stealChances = {3, 7, 12};
+                return (int)stealChances[level-1] + "% steal chance";
+            case "detonate":
+                String[] areaSizes = {"2x2", "3x3", "5x5"};
+                return areaSizes[level-1] + " area mining";
+            case "zetsubo":
+                return "Strength " + getRomanNumeral(level);
+            case "almighty_push":
+                return "Blast players away";
+            case "redemption":
+                return "Keep item on death";
             default:
-                return "blocks_mined"; // fallback
+                return "Level " + level + " effect";
         }
     }
 
-    /**
-     * Gets roman numeral representation of a number
-     */
+    private String formatProgress(long current, long max) {
+        return formatLargeNumber(current) + "/" + formatLargeNumber(max);
+    }
+
+    private String formatLargeNumber(long number) {
+        if (number < 1000) {
+            return String.valueOf(number);
+        } else if (number < 1000000) {
+            return String.format("%.1fK", number / 1000.0);
+        } else if (number < 1000000000) {
+            return String.format("%.1fM", number / 1000000.0);
+        } else {
+            return String.format("%.1fB", number / 1000000000.0);
+        }
+    }
+
+    private ItemStack createGlassPane(Material material) {
+        return createItemStack(material, " ", Arrays.asList());
+    }
+
+    private String getStatisticName(RequirementType type) {
+        switch (type) {
+            case BLOCKS_MINED: return "blocks_mined";
+            case BLOCKS_WALKED: return "blocks_walked";
+            case WHEAT_BROKEN: return "wheat_broken";
+            case CREEPERS_KILLED: return "creepers_killed";
+            case IRON_INGOTS: return "iron_ingots_traded";
+            case PANTS_CRAFTED: return "pants_crafted";
+            case SOULS: return "souls_collected";
+            default: return "blocks_mined";
+        }
+    }
+
     private String getRomanNumeral(int number) {
         String[] romanNumerals = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"};
         if (number <= 0 || number >= romanNumerals.length) {
@@ -1074,9 +960,6 @@ public class GuiManager {
         return romanNumerals[number];
     }
 
-    /**
-     * Creates a basic ItemStack with meta
-     */
     private ItemStack createItemStack(Material material, String name, List<String> lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
@@ -1094,9 +977,6 @@ public class GuiManager {
         return item;
     }
 
-    /**
-     * Fills empty slots with glass panes
-     */
     private void fillEmptySlots(Inventory inventory) {
         boolean fillEmpty = plugin.getConfigManager().getBoolean("config.yml", "gui.fill-empty-slots", true);
         if (!fillEmpty) return;
@@ -1120,9 +1000,6 @@ public class GuiManager {
         }
     }
 
-    /**
-     * Formats material names to be more readable
-     */
     private String formatMaterialName(Material material) {
         String name = material.name().toLowerCase().replace("_", " ");
         String[] words = name.split(" ");
@@ -1136,11 +1013,16 @@ public class GuiManager {
         return formatted.toString();
     }
 
+    public void reload() {
+        templates.clear();
+        loadGuiTemplates();
+    }
+
     /**
-     * ENHANCED DEBUG: Method to test and log soul shop availability with detailed logging
+     * DEBUG: Method to test and log soul shop availability with detailed logging
      */
     public void debugSoulShopAvailability(Player player) {
-        plugin.getLogger().info("=== ENHANCED SOUL SHOP DEBUG for " + player.getName() + " ===");
+        plugin.getLogger().info("=== SOUL SHOP DEBUG for " + player.getName() + " ===");
 
         Map<String, Integer> playerEnchants = plugin.getPlayerDataManager().getPlayerEnchants(player.getUniqueId()).join();
         plugin.getLogger().info("Player enchants: " + playerEnchants);
@@ -1183,14 +1065,32 @@ public class GuiManager {
             }
         }
 
-        plugin.getLogger().info("=== END ENHANCED SOUL SHOP DEBUG ===");
+        plugin.getLogger().info("=== END SOUL SHOP DEBUG ===");
     }
 
     /**
-     * Reloads GUI templates
+     * Helper method to check if player can purchase an enchant level
      */
-    public void reload() {
-        templates.clear();
-        loadGuiTemplates();
+    private boolean canPurchaseEnchantLevel(Player player, CustomEnchant enchant, int level, Map<String, Integer> playerEnchants) {
+        Integer currentLevel = playerEnchants.get(enchant.getName());
+
+        // Can't purchase if already owned
+        if (currentLevel != null && currentLevel >= level) {
+            return false;
+        }
+
+        // For level 1, just check if they don't have it
+        if (level == 1) {
+            return currentLevel == null || currentLevel < 1;
+        }
+
+        // For higher levels, must have previous level
+        if (currentLevel == null || currentLevel < level - 1) {
+            return false;
+        }
+
+        // Must be the next level (can't skip)
+        return level == currentLevel + 1;
     }
+
 }

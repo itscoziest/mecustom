@@ -1,0 +1,89 @@
+name: MystEnchants
+version: ${version}
+main: com.mystenchants.MystEnchants
+author: StrikesDev
+description: Custom enchants, perks, features, and more.
+api-version: 1.20
+depend: [Vault]
+softdepend: [PlaceholderAPI, MythicMobs]
+
+commands:
+  enchants:
+    description: Opens the enchants GUI or manages enchants
+    aliases: [e, mystenchants, me]
+    usage: |
+      /enchants - Open enchants GUI
+      /enchants [player] - Show player's enchants (admin)
+      /enchants [player] unlock <enchant> <level> - Unlock enchant (admin)
+      /enchants [player] remove <enchant> <level> - Remove enchant (admin)
+      /enchants debug soulshop - Debug soul shop availability
+      /enchants setstat <player> <statistic> <amount> - Set player statistic (admin)
+
+  soulshop:
+    description: Opens the soul shop GUI
+    usage: /soulshop
+
+  souls:
+    description: Check or manage souls
+    usage: /souls [player] [give/take] [amount]
+
+  oracle:
+    description: Opens the oracle GUI
+    usage: /oracle
+
+  perks:
+    description: Opens the perks GUI
+    usage: /perks [give] [player] [perk] [amount]
+
+  redemption:
+    description: Start redemption boss fight
+    usage: /redemption [end/spec/admin]
+
+  enchant:
+    description: Apply enchants to held items
+    usage: /enchant <player> give <enchant> <level>
+    aliases: [applyenchant, giveenchant]
+
+permissions:
+  mystenchants.*:
+    description: All MystEnchants permissions
+    default: op
+    children:
+      mystenchants.admin: true
+      mystenchants.use: true
+
+  mystenchants.admin:
+    description: Admin permissions for MystEnchants
+    default: op
+
+  mystenchants.use:
+    description: Basic usage permissions
+    default: true
+
+  mystenchants.enchants:
+    description: Use enchants command
+    default: true
+
+  mystenchants.soulshop:
+    description: Use soul shop
+    default: true
+
+  mystenchants.oracle:
+    description: Use oracle
+    default: true
+
+  mystenchants.perks:
+    description: Use perks
+    default: true
+
+  mystenchants.redemption:
+    description: Use redemption
+    default: true
+
+  mystenchants.enchant.use:
+    description: Use enchant apply command
+    default: op
+
+  mystenchants.enchant.bypass:
+    description: Bypass enchant unlock requirements
+    default: op

@@ -1,0 +1,302 @@
+# Database Configuration
+database:
+  type: SQLITE # SQLITE or MYSQL
+  mysql:
+    host: localhost
+    port: 3306
+    database: mystenchants
+    username: root
+    password: ""
+    useSSL: false
+  connection-pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout: 30000
+    idle-timeout: 600000
+    max-lifetime: 1800000
+
+# General Settings
+settings:
+  debug: false
+  auto-save-interval: 300 # seconds
+
+# Messages Settings
+messages:
+  prefix: "&8[&6MystEnchants&8] "
+  no-permission: "&cYou don't have permission to use this command!"
+  player-not-found: "&cPlayer not found!"
+  invalid-arguments: "&cInvalid arguments! Use: {usage}"
+  config-reloaded: "&aConfiguration reloaded successfully!"
+
+  # Enchant Apply Command Messages
+  enchant-not-unlocked: "&c{player} has not unlocked {enchant} Level {level}!"
+  enchant-apply-admin-success: "&aApplied {enchant} Level {level} to {player}'s {item}!"
+  enchant-apply-player-received: "&aYour {item} has been enchanted with {enchant} Level {level}!"
+  enchant-already-has-same: "&c{player}'s {item} already has {enchant} Level {level}!"
+  enchant-already-has-different: "&c{player}'s {item} already has {existing_enchant} Level {existing_level}!"
+  enchant-not-applicable: "&c{enchant} cannot be applied to {item}!"
+  enchant-no-item-held: "&c{player} is not holding any item!"
+
+  # Souls
+  souls-balance: "&aYou have &6{souls} &asouls."
+  souls-balance-other: "&a{player} has &6{souls} &asouls."
+  souls-given: "&aGiven &6{amount} &asouls to &6{player}&a."
+  souls-taken: "&aTaken &6{amount} &asouls from &6{player}&a."
+  souls-received: "&aYou received &6{amount} &asouls!"
+  souls-lost: "&cYou lost &6{amount} &asouls!"
+  insufficient-souls: "&cYou don't have enough souls!"
+
+  # Enchants
+  enchant-unlocked: "&aYou have unlocked &6{enchant} Level {level}&a!"
+  enchant-already-unlocked: "&cYou already have this enchant unlocked!"
+  enchant-max-level: "&cThis enchant is already at maximum level!"
+  enchant-previous-level-required: "&cYou need to unlock the previous level first!"
+  enchant-purchase-success: "&aYou have purchased &6{enchant} Level {level} &afor &6{cost} EXP levels&a!"
+  insufficient-exp: "&cYou don't have enough EXP levels!"
+
+  # Enchant Application System
+  enchant-apply-instructions: "&6&lHow to Apply: &eDrag and drop &7onto compatible item"
+  enchant-apply-no-compatible: "&cCannot apply {enchant} to {item}!"
+  enchant-apply-compatible-items: "&7Compatible items: &f{items}"
+  enchant-apply-success: "&a&l✓ APPLIED! &7{enchant} Level {level} → {item}"
+
+  # Soul Shop Status Messages
+  soul-shop-owned: "&cYou already own this enchant level!"
+  soul-shop-requires-level: "&cYou need to own Level {level} first!"
+  soul-shop-requirements-not-met: "&cYou don't meet the requirements for this enchant level!"
+  soul-shop-not-available: "&cThis item is not available for purchase!"
+  soul-shop-check-oracle: "&7Check the Oracle for requirement details."
+
+  # Enhanced Soul Shop Messages
+  soul-shop-purchase-success: "&aYou purchased {enchant} Level {level} Dye for {cost} souls!"
+  soul-shop-purchase-instructions: "&eDrag and drop the dye onto a compatible item to apply the enchant!"
+  soul-shop-insufficient-souls-detailed: "&cYou need &6{cost} &csouls but only have &6{current}&c!"
+  soul-shop-purchase-error: "&cError processing purchase: {error}"
+  soul-shop-souls-removed-failed: "&cFailed to remove souls from your account!"
+
+  # Navigation Messages
+  soul-shop-page-2-title: "&6&lSoul Shop (Page 2)"
+  soul-shop-next-page: "&a&lNext Page →"
+  soul-shop-previous-page: "&c&l← Previous Page"
+  soul-shop-navigate-description: "&7Navigate between pages"
+  soul-shop-page-info: "&7Page {current} of {total}"
+
+  # Backup Enchant
+  backup-activated: "&6&lBACKUP! &7Spawned {count} iron golem{s} to protect you!"
+  backup-expired: "&7Your backup golems have disappeared."
+  backup-golem-died: "&cOne of your backup golems has been destroyed!"
+
+  # Redemption
+  redemption-boss-spawn-not-set: "&cRedemption boss spawn point has not been set! Use /redemption admin bossSetSpawn"
+  redemption-player-spawn-not-set: "&cRedemption player spawn point has not been set! Use /redemption admin playerSetSpawn"
+  redemption-active: "&cA redemption is already active!"
+  redemption-cooldown: "&cYou are on redemption cooldown for &6{time}&c!"
+  redemption-boss-spawn-set: "&aRedemption boss spawn point set!"
+  redemption-player-spawn-set: "&aRedemption player spawn point set!"
+  redemption-started: "&6{player} &ahas started a redemption boss fight!"
+  redemption-completed: "&6{player} &ahas completed the redemption boss fight!"
+  redemption-failed: "&6{player} &afailed the redemption boss fight!"
+  redemption-spectate-join: "&aYou are now spectating the redemption fight!"
+  redemption-spectate-leave: "&aYou are no longer spectating the redemption fight!"
+  redemption-force-ended: "&cRedemption fight has been force ended by an admin!"
+  redemption-inventory-full: "&cYour inventory is full! You need at least {slots} empty slots for redemption rewards!"
+
+  # Perks
+  perk-given: "&aGiven &6{amount}x {perk} &ato &6{player}&a!"
+  perk-received: "&aYou received &6{amount}x {perk}&a!"
+  perk-cooldown: "&cThis perk is on cooldown for &6{time}&c!"
+
+  # Teleport Snowball
+  perk-teleport-success: "&bTeleported to {player}!"
+  perk-teleport-target: "&b{player} teleported to you!"
+  perk-teleport-impact: "&bTeleported to impact location!"
+
+  # Grappling Hook
+  perk-grappling-hook-success: "&aYou hooked {player}!"
+  perk-grappling-hook-hooked: "&a{player} hooked you with a grappling hook!"
+
+  # Tradeoff Egg
+  perk-tradeoff-swapped: "&eYou swapped {your_effects} effects with {player} for their {their_effects} effects!"
+  perk-tradeoff-swapped-target: "&e{player} swapped their {their_effects} effects with your {your_effects} effects!"
+  perk-tradeoff-lock-expired: "&7Potion effect lock expired."
+  perk-tradeoff-block-hit: "&eTradeoff egg can only affect players!"
+
+  # Snowman
+  perk-snowman-spawned: "&fAttacking snowman summoned for {duration} seconds!"
+  perk-snowman-expired: "&fYour snowman has expired."
+  perk-snowman-hit: "&fYour snowman hit {player}!"
+  perk-snowman-hit-by: "&bYou were hit by {player}'s snowman!"
+
+  # Worthy Sacrifice
+  perk-worthy-sacrifice-spawned: "&5Guardian witch summoned! It will follow and protect you."
+  perk-worthy-sacrifice-health-display: "&7The witch's health will display above it."
+  perk-worthy-sacrifice-destroyed: "&5Your guardian witch has been destroyed!"
+  perk-worthy-sacrifice-fallen: "&5Your guardian witch has fallen!"
+
+# GUI Settings
+gui:
+  fill-empty-slots: true
+  fill-item:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+# Effects Configuration
+effects:
+  enchant-apply:
+    sound: BLOCK_ENCHANTMENT_TABLE_USE
+    sound-volume: 1.0
+    sound-pitch: 1.2
+    particles: ENCHANTMENT_TABLE
+    particle-count: 30
+
+# Cooldown Settings (in seconds)
+cooldowns:
+  redemption: 604800 # 1 week
+
+# Integration Settings
+integrations:
+  # MythicMobs Integration
+  mythicmobs:
+    # Enable/disable MythicMobs integration
+    enabled: false
+
+    # Redemption boss configuration
+    redemption-boss:
+      # MythicMobs mob type to use for redemption boss
+      mob-type: "SkeletalKnight"
+
+      # Level of the MythicMobs boss
+      level: 1.0
+
+      # Display name for the boss (if not set in MythicMobs config)
+      display-name: "&4&lMythic Redemption Boss"
+
+      # Prevent boss from despawning
+      prevent-despawn: true
+
+      # Show boss bar (configure in MythicMobs mob file for best results)
+      show-boss-bar: true
+
+      # Extra rewards for defeating MythicMobs boss
+      extra-rewards:
+        enabled: true
+        souls: 50    # Extra souls for MythicMobs boss
+        exp: 100     # Extra EXP for MythicMobs boss
+
+    # Messages for MythicMobs integration
+    messages:
+      boss-spawned: "&6&lA powerful MythicMobs boss has appeared!"
+      vanilla-boss-spawned: "&6&lThe redemption boss has appeared!"
+      mythic-boss-defeated: "&a&lYou have defeated the MythicMobs redemption boss!"
+      extra-souls: "&6+{souls} bonus souls for defeating the MythicMobs boss!"
+      extra-exp: "&a+{exp} bonus EXP for defeating the MythicMobs boss!"
+      fallback-to-vanilla: "&cMythicMobs boss not found! Using vanilla boss instead."
+      integration-disabled: "&7MythicMobs integration is disabled, using vanilla boss."
+
+# Boss Fight Settings
+boss-fight:
+  boss-type: ZOMBIE  # Used when MythicMobs is disabled
+  boss-health: 1000.0
+  boss-name: "&4&lRedemption Boss"
+  arena-radius: 20
+  max-fight-duration: 600 # 10 minutes
+  required-inventory-slots: 2 # Required empty slots for rewards
+
+# Enchant Command Settings
+enchant-command:
+  # Allow replacing different enchants when applying new ones
+  force-replace-different-enchant: false
+
+  # Play effects when enchant is applied
+  play-effects: true
+
+  # Require exact permission level for each enchant tier
+  require-tier-permission: false
+
+  # Log all enchant applications for audit
+  log-applications: true
+
+# EXP Costs for enchant upgrades
+exp-costs:
+  tempo:
+    level-2: 10
+    level-3: 25
+  scholar:
+    level-2: 75
+    level-3: 130
+  serrate:
+    level-2: 15
+    level-3: 35
+  rejuvenate:
+    level-2: 20
+    level-3: 50
+  backup:
+    level-2: 30
+    level-3: 75
+  guillotine:
+    level-2: 25
+    level-3: 60
+  pace:
+    level-2: 20
+    level-3: 45
+  pantsed:
+    level-2: 15
+    level-3: 40
+  detonate:
+    level-2: 50
+    level-3: 125
+  zetsubo:
+    level-2: 100
+    level-3: 200
+  almighty_push:
+    level-1: 0  # No cost for single level enchants
+  redemption:
+    level-1: 0  # Unlocked through boss fight
+
+# Block Mining Requirements
+block-requirements:
+  tempo:
+    level-2: 10000
+    level-3: 100000
+
+# Walking Requirements
+walking-requirements:
+  pace:
+    level-2: 50000
+    level-3: 500000
+
+# Wheat Breaking Requirements
+wheat-requirements:
+  rejuvenate:
+    level-2: 10000
+    level-3: 75000
+
+# Creeper Killing Requirements
+creeper-requirements:
+  detonate:
+    level-2: 50000
+    level-3: 300000
+
+# Iron Ingot Trading Requirements
+iron-requirements:
+  backup:
+    level-2: 10000
+    level-3: 75000
+
+# Soul Collection Requirements
+soul-requirements:
+  guillotine:
+    level-2: 100
+    level-3: 1000
+
+# Pants Crafting Requirements
+pants-requirements:
+  pantsed:
+    level-2: 1000
+    level-3: 3000
+
+# Money Requirements (Vault)
+money-requirements:
+  serrate:
+    level-2: 1000000
+    level-3: 10000000

@@ -1,0 +1,93 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+group = 'com.mystenchants'
+version = '1.0.0'
+sourceCompatibility = '17'
+targetCompatibility = '17'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'papermc-repo'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+    maven {
+        name = 'sonatype'
+        url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+    maven {
+        name = 'jitpack'
+        url = 'https://jitpack.io'
+    }
+    maven {
+        name = 'placeholderapi'
+        url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/'
+    }
+    maven {
+        name = 'vault-repo'
+        url = 'https://nexus.hc.to/content/repositories/pub_releases'
+    }
+    maven {
+        name = 'lumine-repo'
+        url = 'https://mvn.lumine.io/repository/maven-public/'
+    }
+    maven {
+        name = 'nexus'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT'
+    compileOnly 'net.milkbowl.vault:VaultAPI:1.7'
+    compileOnly 'me.clip:placeholderapi:2.11.5'
+
+    // MythicMobs dependency
+    compileOnly 'io.lumine:Mythic-Dist:5.6.1'
+
+    implementation 'org.bstats:bstats-bukkit:3.0.0'
+    implementation 'com.zaxxer:HikariCP:5.0.1'
+    implementation 'org.xerial:sqlite-jdbc:3.42.0.0'
+    implementation 'mysql:mysql-connector-java:8.0.33'
+}
+
+def targetJavaVersion = 17
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release = targetJavaVersion
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+shadowJar {
+    relocate 'org.bstats', 'com.mystenchants.libs.bstats'
+    relocate 'com.zaxxer.hikari', 'com.mystenchants.libs.hikari'
+
+    archiveBaseName = 'MystEnchants'
+    archiveClassifier = ''
+    archiveVersion = ''
+}
+
+build {
+    dependsOn shadowJar
+}

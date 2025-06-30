@@ -1,0 +1,470 @@
+enchants:
+  # COMMON ENCHANTS (Level 1) - These use EXP for upgrades
+  tempo:
+    tier: COMMON
+    max-level: 3
+    applicable-items:
+      - DIAMOND_PICKAXE
+      - NETHERITE_PICKAXE
+      - DIAMOND_AXE
+      - NETHERITE_AXE
+      - DIAMOND_SHOVEL
+      - NETHERITE_SHOVEL
+      - DIAMOND_HOE
+      - NETHERITE_HOE
+    display-name: "&bTempo"
+    description:
+      - "&7Gives haste to the player"
+      - "&7when using tools"
+      - ""
+      - "&7Level 1: &fHaste I"
+      - "&7Level 2: &fHaste II"
+      - "&7Level 3: &fHaste III"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: BLOCKS_MINED
+        amount: 10000
+        message: "&cMine {amount} blocks to unlock level 2!"
+      level-3:
+        type: BLOCKS_MINED
+        amount: 100000
+        message: "&cMine {amount} blocks to unlock level 3!"
+    effects:
+      haste-levels: [1, 2, 3] # Haste level for each enchant level
+
+  scholar:
+    tier: COMMON
+    max-level: 3
+    applicable-items:
+      - DIAMOND_SWORD
+      - NETHERITE_SWORD
+    display-name: "&bScholar"
+    description:
+      - "&7Receive more EXP from"
+      - "&7killing mobs"
+      - ""
+      - "&7Level 1: &f+5% EXP"
+      - "&7Level 2: &f+8% EXP"
+      - "&7Level 3: &f+15% EXP"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: EXP_LEVELS
+        amount: 75
+        message: "&cPay {amount} EXP levels to unlock level 2!"
+      level-3:
+        type: EXP_LEVELS
+        amount: 130
+        message: "&cPay {amount} EXP levels to unlock level 3!"
+    effects:
+      exp-multipliers: [1.05, 1.08, 1.15] # 5%, 8%, 15% more EXP
+
+  # UNCOMMON ENCHANTS (Level 2)
+  serrate:
+    tier: UNCOMMON
+    max-level: 3
+    applicable-items:
+      - DIAMOND_SWORD
+      - NETHERITE_SWORD
+      - DIAMOND_AXE
+      - NETHERITE_AXE
+    display-name: "&aSerrate"
+    description:
+      - "&7Inflicts bleed damage"
+      - "&7on enemies"
+      - ""
+      - "&7Level 1: &f1.5 seconds"
+      - "&7Level 2: &f2 seconds"
+      - "&7Level 3: &f3.5 seconds"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: MONEY
+        amount: 1000000
+        message: "&cPay ${amount} to unlock level 2!"
+      level-3:
+        type: MONEY
+        amount: 10000000
+        message: "&cPay ${amount} to unlock level 3!"
+    effects:
+      bleed-durations: [30, 40, 70] # In ticks (1.5s, 2s, 3.5s)
+      bleed-damage: 1 # Poison level (0 = Poison I)
+
+  rejuvenate:
+    tier: UNCOMMON
+    max-level: 3
+    applicable-items:
+      - DIAMOND_HELMET
+      - NETHERITE_HELMET
+      - DIAMOND_CHESTPLATE
+      - NETHERITE_CHESTPLATE
+      - DIAMOND_LEGGINGS
+      - NETHERITE_LEGGINGS
+      - DIAMOND_BOOTS
+      - NETHERITE_BOOTS
+    display-name: "&aRejuvenate"
+    description:
+      - "&7Heals player when at low HP"
+      - "&7Does not stack"
+      - ""
+      - "&7Level 1: &f2 hearts, 10% chance"
+      - "&7Level 2: &f3 hearts, 12% chance"
+      - "&7Level 3: &f5 hearts, 17% chance"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: WHEAT_BROKEN
+        amount: 10000
+        message: "&cBreak {amount} fully grown wheat to unlock level 2!"
+      level-3:
+        type: WHEAT_BROKEN
+        amount: 75000
+        message: "&cBreak {amount} fully grown wheat to unlock level 3!"
+    effects:
+      heal-amounts: [4.0, 6.0, 10.0] # Hearts healed (2, 3, 5 hearts)
+      heal-chances: [0.10, 0.12, 0.17] # 10%, 12%, 17%
+      trigger-health: 6.0 # Trigger when below 3 hearts
+
+  # RARE ENCHANTS (Level 3)
+  backup:
+    tier: RARE
+    max-level: 3
+    applicable-items:
+      - DIAMOND_SWORD
+      - NETHERITE_SWORD
+      - DIAMOND_AXE
+      - NETHERITE_AXE
+    display-name: "&eBackup"
+    description:
+      - "&7Hit enemies to spawn iron golems"
+      - "&7that will protect you"
+      - ""
+      - "&7Level 1: &f1 iron golem"
+      - "&7Level 2: &f2 iron golems"
+      - "&7Level 3: &f3 iron golems"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: IRON_INGOTS
+        amount: 10000
+        message: "&cTrade {amount} iron ingots to unlock level 2!"
+      level-3:
+        type: IRON_INGOTS
+        amount: 75000
+        message: "&cTrade {amount} iron ingots to unlock level 3!"
+    cooldown: 30 # 30 seconds between uses
+    effects:
+      golem-counts: [ 1, 2, 3 ]
+      golem-health: 100.0
+      golem-damage: 15.0
+      golem-duration: 60 # seconds
+      golem-name: "&6{player}'s Guardian"
+      launch-strength: 2.0
+
+  guillotine:
+    tier: RARE
+    max-level: 3
+    applicable-items:
+      - DIAMOND_AXE
+      - NETHERITE_AXE
+    display-name: "&eGuillotine"
+    description:
+      - "&7Chance to drop player heads"
+      - "&7when killing players"
+      - ""
+      - "&7Level 1: &f10% chance"
+      - "&7Level 2: &f30% chance"
+      - "&7Level 3: &f70% chance"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: SOULS
+        amount: 100
+        message: "&cCollect {amount} souls to unlock level 2!"
+      level-3:
+        type: SOULS
+        amount: 1000
+        message: "&cCollect {amount} souls to unlock level 3!"
+    death-message: "&7This skull belongs to &6{victim}&7. Slain by &6{killer}&7."
+    effects:
+      head-drop-chances: [0.10, 0.30, 0.70] # 10%, 30%, 70%
+
+  # ULTIMATE ENCHANTS (Level 4)
+  pace:
+    tier: ULTIMATE
+    max-level: 3
+    applicable-items:
+      - DIAMOND_BOOTS
+      - NETHERITE_BOOTS
+    display-name: "&6Pace"
+    description:
+      - "&7Gives speed effect"
+      - "&7to the player"
+      - ""
+      - "&7Level 1: &fSpeed I"
+      - "&7Level 2: &fSpeed II"
+      - "&7Level 3: &fSpeed III"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: BLOCKS_WALKED
+        amount: 50000
+        message: "&cWalk {amount} blocks to unlock level 2!"
+      level-3:
+        type: BLOCKS_WALKED
+        amount: 500000
+        message: "&cWalk {amount} blocks to unlock level 3!"
+    effects:
+      speed-levels: [1, 2, 3] # Speed level for each enchant level
+
+  pantsed:
+    tier: ULTIMATE
+    max-level: 3
+    applicable-items:
+      - DIAMOND_LEGGINGS
+      - NETHERITE_LEGGINGS
+    display-name: "&6Pantsed"
+    description:
+      - "&7Chance to remove enemy"
+      - "&7pants and steal them"
+      - ""
+      - "&7Level 1: &f3% chance"
+      - "&7Level 2: &f7% chance"
+      - "&7Level 3: &f12% chance"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: PANTS_CRAFTED
+        amount: 1000
+        message: "&cCraft {amount} pants to unlock level 2!"
+      level-3:
+        type: PANTS_CRAFTED
+        amount: 3000
+        message: "&cCraft {amount} pants to unlock level 3!"
+    effects:
+      steal-chances: [0.03, 0.07, 0.12] # 3%, 7%, 12%
+      target-items:
+        - LEATHER_LEGGINGS
+        - CHAINMAIL_LEGGINGS
+        - IRON_LEGGINGS
+        - GOLDEN_LEGGINGS
+        - DIAMOND_LEGGINGS
+        - NETHERITE_LEGGINGS
+
+  # LEGENDARY ENCHANTS (Level 5)
+  detonate:
+    tier: LEGENDARY
+    max-level: 3
+    applicable-items:
+      - DIAMOND_PICKAXE
+      - NETHERITE_PICKAXE
+      - DIAMOND_AXE
+      - NETHERITE_AXE
+      - DIAMOND_SHOVEL
+      - NETHERITE_SHOVEL
+    display-name: "&cDetonate"
+    description:
+      - "&7Mines blocks in an area"
+      - "&7around the broken block"
+      - ""
+      - "&7Level 1: &f2x2 area"
+      - "&7Level 2: &f3x3 area"
+      - "&7Level 3: &f5x5 area"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+      level-2:
+        type: CREEPERS_KILLED
+        amount: 50000
+        message: "&cKill {amount} creepers to unlock level 2!"
+      level-3:
+        type: CREEPERS_KILLED
+        amount: 300000
+        message: "&cKill {amount} creepers to unlock level 3!"
+    effects:
+      area-sizes: [1, 1, 2] # Radius for 2x2, 3x3, 5x5 areas
+      excluded-blocks:
+        - BEDROCK
+        - BARRIER
+        - END_PORTAL_FRAME
+        - SPAWNER
+
+  almighty_push:
+    tier: LEGENDARY
+    max-level: 1
+    applicable-items:
+      - DIAMOND_SWORD
+      - NETHERITE_SWORD
+      - DIAMOND_AXE
+      - NETHERITE_AXE
+    display-name: "&cAlmighty Push"
+    description:
+      - "&7Right-click to blast"
+      - "&7players away from you"
+      - ""
+      - "&7Radius: &f10 blocks"
+      - "&7Cooldown: &f30 seconds"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aNo requirements - available in Soul Shop!"
+    cooldown: 30
+    effects:
+      push-radius: 10.0
+      push-strength: 3.0
+      upward-velocity: 0.5
+      sound: ENTITY_GENERIC_EXPLODE
+      particles: EXPLOSION_LARGE
+      particle-count: 50
+
+  # MYSTICAL ENCHANTS (Level 6)
+  redemption:
+    tier: MYSTICAL
+    max-level: 1
+    applicable-items:
+      - DIAMOND_HELMET
+      - NETHERITE_HELMET
+      - DIAMOND_CHESTPLATE
+      - NETHERITE_CHESTPLATE
+      - DIAMOND_LEGGINGS
+      - NETHERITE_LEGGINGS
+      - DIAMOND_BOOTS
+      - NETHERITE_BOOTS
+      - DIAMOND_SWORD
+      - NETHERITE_SWORD
+      - DIAMOND_AXE
+      - NETHERITE_AXE
+      - DIAMOND_PICKAXE
+      - NETHERITE_PICKAXE
+      - DIAMOND_SHOVEL
+      - NETHERITE_SHOVEL
+    display-name: "&dRedemption"
+    description:
+      - "&7Keep this item upon death"
+      - "&7One time use only"
+      - ""
+      - "&7Unlock by defeating the"
+      - "&7Redemption Boss"
+    unlock-requirements:
+      level-1:
+        type: BOSS_FIGHT
+        amount: 1
+        message: "&cDefeat the Redemption Boss to unlock!"
+    effects:
+      one-time-use: true
+      removal-message: "&dRedemption enchant activated! Item saved from death."
+
+  zetsubo:
+    tier: MYSTICAL
+    max-level: 2
+    applicable-items:
+      - DIAMOND_HELMET
+      - NETHERITE_HELMET
+      - DIAMOND_CHESTPLATE
+      - NETHERITE_CHESTPLATE
+      - DIAMOND_LEGGINGS
+      - NETHERITE_LEGGINGS
+      - DIAMOND_BOOTS
+      - NETHERITE_BOOTS
+    display-name: "&dZetsubo"
+    description:
+      - "&7Permanent strength effect"
+      - "&7Must be applied to all armor"
+      - ""
+      - "&7Level 1: &fStrength I"
+      - "&7Level 2: &fStrength II"
+    unlock-requirements:
+      level-1:
+        type: NONE
+        amount: 0
+        message: "&aSpecial unlock requirements - contact admin!"
+      level-2:
+        type: TBD
+        amount: 0
+        message: "&cTBD - To be determined by server admins!"
+    requires-full-set: true
+    effects:
+      strength-levels: [1, 2] # Strength level for each enchant level
+      set-bonus-message: "&dZetsubo Set Bonus Activated! Strength {level}!"
+
+# Enchant Tiers Configuration
+tiers:
+  COMMON:
+    display-name: "&bCommon"
+    color: "&b"
+    gui-item: LIGHT_BLUE_DYE
+    level: 1
+  UNCOMMON:
+    display-name: "&aUncommon"
+    color: "&a"
+    gui-item: LIME_DYE
+    level: 2
+  RARE:
+    display-name: "&eRare"
+    color: "&e"
+    gui-item: YELLOW_DYE
+    level: 3
+  ULTIMATE:
+    display-name: "&6Ultimate"
+    color: "&6"
+    gui-item: ORANGE_DYE
+    level: 4
+  LEGENDARY:
+    display-name: "&cLegendary"
+    color: "&c"
+    gui-item: RED_DYE
+    level: 5
+  MYSTICAL:
+    display-name: "&dMystical"
+    color: "&d"
+    gui-item: PINK_DYE
+    level: 6
+    stp-only: true
+
+# Global Enchant Settings
+global-settings:
+  # Enchant application settings
+  application:
+    allow-multiple-custom-enchants: false
+    allow-with-vanilla-enchants: true
+    require-compatible-item: true
+
+  # Visual effects
+  visual-effects:
+    enchant-glow: true
+    particle-effects: true
+    sound-effects: true
+
+  # Performance settings
+  performance:
+    async-database-operations: true
+    cache-player-data: true
+    batch-statistics-updates: true

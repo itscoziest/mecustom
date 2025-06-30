@@ -1,0 +1,565 @@
+guis:
+  # Main Enchants GUI
+  enchants:
+    title: "&6&lEnchants"
+    size: 54
+    items:
+      common:
+        slot: 20
+        material: LIGHT_BLUE_DYE
+        name: "&b&lCommon Enchants"
+        lore:
+          - "&7Level 1 enchants that provide"
+          - "&7basic enhancements to your gear"
+          - ""
+          - "&7• &bTempo &7- Haste effect"
+          - "&7• &bScholar &7- More EXP from mobs"
+          - ""
+          - "&eClick to view enchants!"
+        glow: false
+      uncommon:
+        slot: 21
+        material: LIME_DYE
+        name: "&a&lUncommon Enchants"
+        lore:
+          - "&7Level 2 enchants with more"
+          - "&7powerful effects than common"
+          - ""
+          - "&7• &aSerrate &7- Bleed damage"
+          - "&7• &aRejuvenate &7- Healing at low HP"
+          - ""
+          - "&eClick to view enchants!"
+        glow: false
+      rare:
+        slot: 22
+        material: YELLOW_DYE
+        name: "&e&lRare Enchants"
+        lore:
+          - "&7Level 3 enchants with strong"
+          - "&7abilities and unique effects"
+          - ""
+          - "&7• &eBackup &7- Spawn iron golems"
+          - "&7• &eGuillotine &7- Drop player heads"
+          - ""
+          - "&eClick to view enchants!"
+        glow: false
+      ultimate:
+        slot: 23
+        material: ORANGE_DYE
+        name: "&6&lUltimate Enchants"
+        lore:
+          - "&7Level 4 enchants with very"
+          - "&7powerful and rare abilities"
+          - ""
+          - "&7• &6Pace &7- Speed effect"
+          - "&7• &6Pantsed &7- Steal enemy pants"
+          - ""
+          - "&eClick to view enchants!"
+        glow: false
+      legendary:
+        slot: 24
+        material: RED_DYE
+        name: "&c&lLegendary Enchants"
+        lore:
+          - "&7Level 5 enchants with extreme"
+          - "&7power and devastating effects"
+          - ""
+          - "&7• &cDetonate &7- Area mining"
+          - "&7• &cAlmighty Push &7- Blast enemies"
+          - ""
+          - "&eClick to view enchants!"
+        glow: false
+      mystical:
+        slot: 25
+        material: PINK_DYE
+        name: "&d&lMystical Enchants"
+        lore:
+          - "&7Level 6 enchants with godlike"
+          - "&7abilities. Extremely rare!"
+          - ""
+          - "&7• &dRedemption &7- Keep item on death"
+          - "&7• &dZetsubo &7- Permanent strength"
+          - ""
+          - "&c&lREQUIRES STP ITEMS!"
+          - "&eClick to view enchants!"
+        glow: true
+
+  # Individual Tier GUIs
+  tier-view:
+    title: "&6&l{tier} Enchants"
+    size: 54
+    back-button:
+      slot: 49
+      material: ARROW
+      name: "&c&lBack"
+      lore:
+        - "&7Return to main enchants menu"
+        - ""
+        - "&eClick to go back!"
+
+  # Oracle GUI
+  oracle:
+    title: "&6&lOracle"
+    size: 54
+    items:
+      purchase-section:
+        slot: 53
+        material: EXPERIENCE_BOTTLE
+        name: "&a&lPurchase Upgrades"
+        lore:
+          - "&7Click to view enchants you"
+          - "&7can upgrade with EXP levels"
+          - ""
+          - "&7Available for:"
+          - "&7• &bTempo &7and &bScholar"
+          - "&7• Other EXP-upgradeable enchants"
+          - ""
+          - "&eClick to open!"
+        glow: true
+      info-item:
+        slot: 4
+        material: BOOK
+        name: "&6&lOracle Information"
+        lore:
+          - "&7Welcome to the Oracle!"
+          - "&7Here you can view your unlocked"
+          - "&7enchants and their upgrade paths."
+          - ""
+          - "&7Click enchants to see details"
+          - "&7and unlock requirements."
+          - ""
+          - "&7Use the Purchase section to"
+          - "&7upgrade with EXP levels!"
+
+  # Oracle Details GUI (Enhanced with specific layout)
+  oracle-details:
+    title: "&6&l{enchant} Details"
+    size: 27
+    # Visual settings
+    settings:
+      show-progress-bars: true
+      show-effect-descriptions: true
+      show-requirement-details: true
+      fill-empty-with-black-glass: true
+
+  # Oracle Purchase GUI
+  oracle-purchase:
+    title: "&a&lPurchase Upgrades"
+    size: 54
+    back-button:
+      slot: 49
+      material: ARROW
+      name: "&c&lBack"
+      lore:
+        - "&7Return to oracle menu"
+        - ""
+        - "&eClick to go back!"
+    info-item:
+      slot: 4
+      material: EXPERIENCE_BOTTLE
+      name: "&a&lEXP Level Upgrades"
+      lore:
+        - "&7Use your EXP levels to upgrade"
+        - "&7certain enchants to higher levels!"
+        - ""
+        - "&7Only specific enchants can be"
+        - "&7upgraded this way. Others require"
+        - "&7completing various tasks."
+        - ""
+        - "&7Costs are configurable by admins!"
+
+    # Soul Shop Page 1
+  soul-shop:
+    title: "&6&lSoul Shop (Page 1)"
+    size: 54
+    navigation:
+      next-page:
+        slot: 53
+        material: ARROW
+        name: "&a&lNext Page →"
+        lore:
+          - "&7View more enchants"
+          - ""
+          - "&eClick to navigate!"
+      page-info:
+        slot: 4
+        material: GHAST_TEAR
+        name: "&6&lSoul Shop (Page 1)"
+        lore:
+          - "&7Purchase enchant books and perks"
+          - "&7using souls collected from kills!"
+          - ""
+          - "&7• &f1 soul &7per mob kill"
+          - "&7• &f5 souls &7per player kill"
+          - ""
+          - "&7Drag enchant books onto items"
+          - "&7or right-click to apply them!"
+          - ""
+          - "&6Page 1 of 2"
+
+    # Enhanced status indicators with proper color codes
+    status-indicators:
+      owned:
+        material: LIME_DYE
+        status-text: "&a&l✓ OWNED"
+        description: "&7You already own this enchant level"
+        color-code: "&a"
+
+      available:
+        material: ENCHANTED_BOOK
+        status-text: "&a&l✓ AVAILABLE"
+        description: "&7Click to purchase this enchant"
+        glow: true
+        color-code: "&a"
+
+      requires-previous:
+        material: GRAY_DYE
+        status-text: "&c&l✗ REQUIRES LEVEL {level}"
+        description: "&7Must own previous level first"
+        color-code: "&c"
+
+      requirements-not-met:
+        material: GRAY_DYE
+        status-text: "&c&l✗ REQUIREMENTS NOT MET"
+        description: "&7Complete requirements to unlock"
+        color-code: "&c"
+
+      error:
+        material: BARRIER
+        status-text: "&c&l✗ ERROR"
+        description: "&7Error checking requirements"
+        color-code: "&c"
+
+    # Visual settings
+    visual:
+      show-all-levels: true
+      group-by-enchant: true
+      highlight-available: true
+      dim-unavailable: true
+
+  # Soul Shop Page 2
+  soul-shop-page-2:
+    title: "&6&lSoul Shop (Page 2)"
+    size: 54
+    navigation:
+      previous-page:
+        slot: 45
+        material: ARROW
+        name: "&c&l← Previous Page"
+        lore:
+          - "&7Go back to page 1"
+          - ""
+          - "&eClick to navigate!"
+      page-info:
+        slot: 4
+        material: GHAST_TEAR
+        name: "&6&lSoul Shop (Page 2)"
+        lore:
+          - "&7Purchase enchant books and perks"
+          - "&7using souls collected from kills!"
+          - ""
+          - "&7• &f1 soul &7per mob kill"
+          - "&7• &f5 souls &7per player kill"
+          - ""
+          - "&7Drag enchant books onto items"
+          - "&7or right-click to apply them!"
+          - ""
+          - "&6Page 2 of 2"
+
+    # Same status indicators as page 1
+    status-indicators:
+      owned:
+        material: LIME_DYE
+        status-text: "&a&l✓ OWNED"
+        description: "&7You already own this enchant level"
+        color-code: "&a"
+
+      available:
+        material: ENCHANTED_BOOK
+        status-text: "&a&l✓ AVAILABLE"
+        description: "&7Click to purchase this enchant"
+        glow: true
+        color-code: "&a"
+
+      requires-previous:
+        material: GRAY_DYE
+        status-text: "&c&l✗ REQUIRES LEVEL {level}"
+        description: "&7Must own previous level first"
+        color-code: "&c"
+
+      requirements-not-met:
+        material: GRAY_DYE
+        status-text: "&c&l✗ REQUIREMENTS NOT MET"
+        description: "&7Complete requirements to unlock"
+        color-code: "&c"
+
+      error:
+        material: BARRIER
+        status-text: "&c&l✗ ERROR"
+        description: "&7Error checking requirements"
+        color-code: "&c"
+
+    # Visual settings
+    visual:
+      show-all-levels: true
+      group-by-enchant: true
+      highlight-available: true
+      dim-unavailable: true
+
+  # Perks GUI
+  perks:
+    title: "&6&lPerks"
+    size: 54
+    items:
+      teleport-snowball:
+        slot: 10
+        material: SNOWBALL
+        name: "&b&lTeleport Snowball"
+        lore:
+          - "&7Teleport to the player you hit"
+          - "&7with this snowball"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+      grappling-hook:
+        slot: 11
+        material: FISHING_ROD
+        name: "&a&lGrappling Hook"
+        lore:
+          - "&7Hook onto players and pull"
+          - "&7them towards you for {hook-time}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+      snowman-egg:
+        slot: 12
+        material: PUMPKIN
+        name: "&f&lSnowman Egg"
+        lore:
+          - "&7Spawns a snowman that attacks"
+          - "&7enemies for {duration}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+      spellbreaker:
+        slot: 13
+        material: BLAZE_ROD
+        name: "&6&lSpellbreaker"
+        lore:
+          - "&7Hit a player {hits} times to remove"
+          - "&7their potion effects for {duration}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+      tradeoff-egg:
+        slot: 14
+        material: EGG
+        name: "&e&lTradeoff Egg"
+        lore:
+          - "&7Switch potion effects with"
+          - "&7target for {lock-duration}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+      worthy-sacrifice:
+        slot: 15
+        material: WITCH_SPAWN_EGG
+        name: "&5&lWorthy Sacrifice"
+        lore:
+          - "&7Spawns a witch with {health} HP"
+          - "&7that absorbs your damage"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+      lovestruck:
+        slot: 16
+        material: ROSE_BUSH
+        name: "&d&lLovestruck"
+        lore:
+          - "&7Hit a player {hits} times to give"
+          - "&7nausea and rose inventory for {duration}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+      info-item:
+        slot: 4
+        material: NETHER_STAR
+        name: "&6&lPerks Information"
+        lore:
+          - "&7Purchase powerful single-use items"
+          - "&7that provide unique abilities!"
+          - ""
+          - "&7Each perk has a cooldown after use"
+          - "&7to prevent spam and maintain balance."
+          - ""
+          - "&7Some perks require multiple hits"
+          - "&7or specific conditions to activate."
+
+  # Redemption Confirmation GUI
+  redemption-confirm:
+    title: "&4&lRedemption Boss Fight"
+    size: 27
+    items:
+      confirm:
+        slot: 11
+        material: GREEN_WOOL
+        name: "&a&lConfirm"
+        lore:
+          - "&7Start the redemption boss fight"
+          - ""
+          - "&c&lWARNING:"
+          - "&cYou will lose ALL items if you die!"
+          - "&cThis boss is extremely difficult!"
+          - "&cOther players can spectate with /redemption spec"
+          - ""
+          - "&a&lREWARD:"
+          - "&aUnlock the Redemption enchant!"
+          - ""
+          - "&eClick to confirm and start!"
+        glow: true
+      cancel:
+        slot: 15
+        material: RED_WOOL
+        name: "&c&lCancel"
+        lore:
+          - "&7Cancel the redemption fight"
+          - "&7and return to safety"
+          - ""
+          - "&eClick to cancel!"
+      info:
+        slot: 4
+        material: WITHER_SKELETON_SKULL
+        name: "&4&lRedemption Boss"
+        lore:
+          - "&7The ultimate challenge!"
+          - "&7Defeat this boss to unlock"
+          - "&7the legendary Redemption enchant."
+          - ""
+          - "&7Boss Stats:"
+          - "&7• &cHealth: &f1000 HP"
+          - "&7• &cDamage: &fVery High"
+          - "&7• &cAbilities: &fMultiple attacks"
+          - ""
+          - "&7Fight Duration: &610 minutes max"
+          - "&7Cooldown: &61 week after attempt"
+
+# Oracle Details Layout Configuration
+oracle-details-layout:
+  # Single level enchants (like Almighty Push, Redemption)
+  single-level:
+    enchant-slot: 13  # Center slot
+
+  # Two level enchants (like some enchants with 2 levels)
+  two-level:
+    level-1-slot: 11      # Level 1 enchant info
+    glass-slots: [12, 13] # Yellow/Gray glass between levels
+    level-2-slot: 14      # Level 2 enchant info
+
+  # Three level enchants (like most standard enchants)
+  three-level:
+    level-1-slot: 10      # Level 1 enchant info
+    glass-1-slots: [11, 12] # Yellow/Gray glass after level 1
+    level-2-slot: 13      # Level 2 enchant info
+    glass-2-slots: [14, 15] # Yellow/Red glass after level 2
+    level-3-slot: 16      # Level 3 enchant info
+
+  # Glass pane materials for different states
+  glass-materials:
+    unlocked: YELLOW_STAINED_GLASS_PANE  # When previous level is unlocked
+    locked-level-2: RED_STAINED_GLASS_PANE  # When level 2 is locked (for 3-level enchants)
+    locked: GRAY_STAINED_GLASS_PANE      # When level 1 is locked
+
+  # Messages for level items
+  messages:
+    unlocked: "&a&l✓ LEVEL {level} UNLOCKED"
+    locked: "&c&l✗ LEVEL {level} LOCKED"
+    effect-header: "&6Level {level} Effect:"
+    requirements-header: "&cRequirements:"
+    no-requirements: "&aNo requirements needed!"
+    progress-format: "&7Progress: &f{progress}%"
+    progress-detailed: "&7Progress: &f{progress}% &7({current}/{max})"
+    current-level: "&7Current level: &a{level}"
+
+  progress-display:
+    # Show both percentage and current/max
+    show-percentage: true
+    show-current-max: true
+    # Format for progress lines
+    format: "&7Progress: &f{percentage}% &7({current}/{max})"
+    # Compact format for limited space
+    compact-format: "&f{current}&7/&f{max} &7({percentage}%)"
+
+# Oracle progression visual configuration (legacy support)
+oracle-progression:
+  # Materials for different states
+  unlocked-material: YELLOW_STAINED_GLASS_PANE
+  completed-material: LIME_STAINED_GLASS_PANE
+  locked-material: GRAY_STAINED_GLASS_PANE
+
+  # Slot positions for two-level enchants
+  two-level:
+    level-1-slot: 11  # Left side
+    level-2-slot: 15  # Right side
+
+  # Slot positions for three-level enchants
+  three-level:
+    level-1-slot: 10  # Left
+    level-2-slot: 14  # Center-right
+    level-3-slot: 16  # Right
+
+  # Configurable messages for progression items
+  messages:
+    unlocked: "&a&l✓ UNLOCKED"
+    locked: "&c&l✗ LOCKED"
+    requirements: "&7Requirements:"
+    progress: "&7Progress: &f{progress}%"
+    effect: "&7Effect at Level {level}:"
+    current-level: "&7Current level: &a{level}"
+
+  # Visual settings
+  visual:
+    show-progress-bar: true
+    show-effect-description: true
+    show-requirement-details: true
+
+  # Color settings for different states
+  colors:
+    unlocked-name: "&6"
+    locked-name: "&7"
+    completed-name: "&a"
+
+# Fill items for empty slots
+fill-items:
+  default:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+    lore: []
+
+# GUI Animation Settings (optional)
+animations:
+  enabled: false
+  title-update-interval: 20 # ticks
+  item-glow-interval: 40 # ticks
+
+# GUI Sound Effects
+sounds:
+  gui-open: BLOCK_CHEST_OPEN
+  gui-close: BLOCK_CHEST_CLOSE
+  button-click: UI_BUTTON_CLICK
+  purchase-success: ENTITY_PLAYER_LEVELUP
+  purchase-fail: ENTITY_VILLAGER_NO
+  enchant-unlock: BLOCK_ENCHANTMENT_TABLE_USE

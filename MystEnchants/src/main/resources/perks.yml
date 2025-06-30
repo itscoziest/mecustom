@@ -1,0 +1,539 @@
+shop:
+  souls-per-kill: 1
+  souls-per-player-kill: 5
+
+  # Display settings for Soul Shop
+  display:
+    show-all-levels: true
+    show-owned-items: true
+    show-locked-items: true
+
+    # Status messages
+    status-messages:
+      owned: "&a&l✓ OWNED"
+      available: "&a&l✓ AVAILABLE"
+      requires-level: "&c&l✗ REQUIRES LEVEL {level}"
+      requirements-not-met: "&c&l✗ REQUIREMENTS NOT MET"
+
+    # Visual indicators
+    materials:
+      owned: LIME_DYE
+      available: TIER_MATERIAL  # Uses enchant tier material
+      locked: GRAY_DYE
+
+    # Effects
+    glow-available: true
+    dim-locked: true
+
+  # FIXED: Complete layout configuration for both pages
+  layout:
+    # PAGE 1 ENCHANTS - Common (1), Uncommon (2), Rare (3), Ultimate (4)
+    # Common Enchants
+    tempo:
+      level-1:
+        slot: 10
+      level-2:
+        slot: 19
+      level-3:
+        slot: 28
+    scholar:
+      level-1:
+        slot: 11
+      level-2:
+        slot: 20
+      level-3:
+        slot: 29
+
+    # Uncommon Enchants
+    serrate:
+      level-1:
+        slot: 12
+      level-2:
+        slot: 21
+      level-3:
+        slot: 30
+    rejuvenate:
+      level-1:
+        slot: 13
+      level-2:
+        slot: 22
+      level-3:
+        slot: 31
+
+    # Rare Enchants
+    backup:
+      level-1:
+        slot: 14
+      level-2:
+        slot: 23
+      level-3:
+        slot: 32
+    guillotine:
+      level-1:
+        slot: 15
+      level-2:
+        slot: 24
+      level-3:
+        slot: 33
+
+    # Ultimate Enchants
+    pace:
+      level-1:
+        slot: 16
+      level-2:
+        slot: 25
+      level-3:
+        slot: 34
+    pantsed:
+      level-1:
+        slot: 37
+      level-2:
+        slot: 38
+      level-3:
+        slot: 39
+
+  # FIXED: Page 2 layout - Legendary (5) and Mystical (6) enchants only
+  layout-page-2:
+    # LEGENDARY ENCHANTS - Level 5
+    detonate:
+      level-1:
+        slot: 11
+      level-2:
+        slot: 20
+      level-3:
+        slot: 29
+    almighty_push:
+      level-1:
+        slot: 13
+
+    # MYSTICAL ENCHANTS - Level 6
+    redemption:
+      level-1:
+        slot: 15
+    zetsubo:
+      level-1:
+        slot: 16
+      level-2:
+        slot: 25
+
+  # Items available in soul shop (enchant books) - COMPLETE CONFIGURATION
+  items:
+    # COMMON ENCHANTS
+    tempo-book:
+      material: LIGHT_BLUE_DYE
+      name: "&b&lTempo Enchant"
+      lore:
+        - "&7Apply Tempo Level 1 to your tools"
+        - "&7Gives Haste I effect while using tools"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 500
+      enchant: tempo
+      level: 1
+    tempo-book-level-2:
+      material: LIGHT_BLUE_DYE
+      name: "&b&lTempo Level 2 Enchant"
+      lore:
+        - "&7Apply Tempo Level 2 to your tools"
+        - "&7Gives Haste II effect while using tools"
+        - ""
+        - "&7Requirements: &aMine 10,000 blocks"
+        - "&7Cost: &6{cost} souls"
+      cost: 750
+      enchant: tempo
+      level: 2
+    tempo-book-level-3:
+      material: LIGHT_BLUE_DYE
+      name: "&b&lTempo Level 3 Enchant"
+      lore:
+        - "&7Apply Tempo Level 3 to your tools"
+        - "&7Gives Haste III effect while using tools"
+        - ""
+        - "&7Requirements: &aMine 100,000 blocks"
+        - "&7Cost: &6{cost} souls"
+      cost: 1200
+      enchant: tempo
+      level: 3
+
+    scholar-book:
+      material: LIGHT_BLUE_DYE
+      name: "&b&lScholar Enchant"
+      lore:
+        - "&7Apply Scholar Level 1 to your sword"
+        - "&7Get 5% more EXP from killing mobs"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 600
+      enchant: scholar
+      level: 1
+    scholar-book-level-2:
+      material: LIGHT_BLUE_DYE
+      name: "&b&lScholar Level 2 Enchant"
+      lore:
+        - "&7Apply Scholar Level 2 to your sword"
+        - "&7Get 8% more EXP from killing mobs"
+        - ""
+        - "&7Requirements: &aPay 75 EXP levels"
+        - "&7Cost: &6{cost} souls"
+      cost: 900
+      enchant: scholar
+      level: 2
+    scholar-book-level-3:
+      material: LIGHT_BLUE_DYE
+      name: "&b&lScholar Level 3 Enchant"
+      lore:
+        - "&7Apply Scholar Level 3 to your sword"
+        - "&7Get 15% more EXP from killing mobs"
+        - ""
+        - "&7Requirements: &aPay 130 EXP levels"
+        - "&7Cost: &6{cost} souls"
+      cost: 1500
+      enchant: scholar
+      level: 3
+
+    # UNCOMMON ENCHANTS
+    serrate-book:
+      material: LIME_DYE
+      name: "&a&lSerrate Enchant"
+      lore:
+        - "&7Apply Serrate Level 1 to your weapon"
+        - "&7Inflicts bleed damage for 1.5 seconds"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 800
+      enchant: serrate
+      level: 1
+    serrate-book-level-2:
+      material: LIME_DYE
+      name: "&a&lSerrate Level 2 Enchant"
+      lore:
+        - "&7Apply Serrate Level 2 to your weapon"
+        - "&7Inflicts bleed damage for 2 seconds"
+        - ""
+        - "&7Requirements: &aPay $1,000,000"
+        - "&7Cost: &6{cost} souls"
+      cost: 1200
+      enchant: serrate
+      level: 2
+    serrate-book-level-3:
+      material: LIME_DYE
+      name: "&a&lSerrate Level 3 Enchant"
+      lore:
+        - "&7Apply Serrate Level 3 to your weapon"
+        - "&7Inflicts bleed damage for 3.5 seconds"
+        - ""
+        - "&7Requirements: &aPay $10,000,000"
+        - "&7Cost: &6{cost} souls"
+      cost: 2000
+      enchant: serrate
+      level: 3
+
+    rejuvenate-book:
+      material: LIME_DYE
+      name: "&a&lRejuvenate Enchant"
+      lore:
+        - "&7Apply Rejuvenate Level 1 to your armor"
+        - "&7Heals 2 hearts at low HP (10% chance)"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 750
+      enchant: rejuvenate
+      level: 1
+    rejuvenate-book-level-2:
+      material: LIME_DYE
+      name: "&a&lRejuvenate Level 2 Enchant"
+      lore:
+        - "&7Apply Rejuvenate Level 2 to your armor"
+        - "&7Heals 3 hearts at low HP (12% chance)"
+        - ""
+        - "&7Requirements: &aBreak 10,000 wheat"
+        - "&7Cost: &6{cost} souls"
+      cost: 1100
+      enchant: rejuvenate
+      level: 2
+    rejuvenate-book-level-3:
+      material: LIME_DYE
+      name: "&a&lRejuvenate Level 3 Enchant"
+      lore:
+        - "&7Apply Rejuvenate Level 3 to your armor"
+        - "&7Heals 5 hearts at low HP (17% chance)"
+        - ""
+        - "&7Requirements: &aBreak 75,000 wheat"
+        - "&7Cost: &6{cost} souls"
+      cost: 1800
+      enchant: rejuvenate
+      level: 3
+
+    # RARE ENCHANTS
+    backup-book:
+      material: YELLOW_DYE
+      name: "&e&lBackup Enchant"
+      lore:
+        - "&7Apply Backup Level 1 to your weapon"
+        - "&7Spawns 1 iron golem when hit"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 1200
+      enchant: backup
+      level: 1
+    backup-book-level-2:
+      material: YELLOW_DYE
+      name: "&e&lBackup Level 2 Enchant"
+      lore:
+        - "&7Apply Backup Level 2 to your weapon"
+        - "&7Spawns 2 iron golems when hit"
+        - ""
+        - "&7Requirements: &aTrade 10,000 iron ingots"
+        - "&7Cost: &6{cost} souls"
+      cost: 1800
+      enchant: backup
+      level: 2
+    backup-book-level-3:
+      material: YELLOW_DYE
+      name: "&e&lBackup Level 3 Enchant"
+      lore:
+        - "&7Apply Backup Level 3 to your weapon"
+        - "&7Spawns 3 iron golems when hit"
+        - ""
+        - "&7Requirements: &aTrade 75,000 iron ingots"
+        - "&7Cost: &6{cost} souls"
+      cost: 3000
+      enchant: backup
+      level: 3
+
+    guillotine-book:
+      material: YELLOW_DYE
+      name: "&e&lGuillotine Enchant"
+      lore:
+        - "&7Apply Guillotine Level 1 to your axe"
+        - "&710% chance to drop player heads"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 1000
+      enchant: guillotine
+      level: 1
+    guillotine-book-level-2:
+      material: YELLOW_DYE
+      name: "&e&lGuillotine Level 2 Enchant"
+      lore:
+        - "&7Apply Guillotine Level 2 to your axe"
+        - "&730% chance to drop player heads"
+        - ""
+        - "&7Requirements: &aCollect 100 souls"
+        - "&7Cost: &6{cost} souls"
+      cost: 1500
+      enchant: guillotine
+      level: 2
+    guillotine-book-level-3:
+      material: YELLOW_DYE
+      name: "&e&lGuillotine Level 3 Enchant"
+      lore:
+        - "&7Apply Guillotine Level 3 to your axe"
+        - "&770% chance to drop player heads"
+        - ""
+        - "&7Requirements: &aCollect 1,000 souls"
+        - "&7Cost: &6{cost} souls"
+      cost: 2500
+      enchant: guillotine
+      level: 3
+
+    # ULTIMATE ENCHANTS
+    pace-book:
+      material: ORANGE_DYE
+      name: "&6&lPace Enchant"
+      lore:
+        - "&7Apply Pace Level 1 to your boots"
+        - "&7Gives Speed I effect permanently"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 1500
+      enchant: pace
+      level: 1
+    pace-book-level-2:
+      material: ORANGE_DYE
+      name: "&6&lPace Level 2 Enchant"
+      lore:
+        - "&7Apply Pace Level 2 to your boots"
+        - "&7Gives Speed II effect permanently"
+        - ""
+        - "&7Requirements: &aWalk 50,000 blocks"
+        - "&7Cost: &6{cost} souls"
+      cost: 2250
+      enchant: pace
+      level: 2
+    pace-book-level-3:
+      material: ORANGE_DYE
+      name: "&6&lPace Level 3 Enchant"
+      lore:
+        - "&7Apply Pace Level 3 to your boots"
+        - "&7Gives Speed III effect permanently"
+        - ""
+        - "&7Requirements: &aWalk 500,000 blocks"
+        - "&7Cost: &6{cost} souls"
+      cost: 3750
+      enchant: pace
+      level: 3
+
+    # LEGENDARY ENCHANTS (PAGE 2)
+    pantsed-book:
+      material: ORANGE_DYE
+      name: "&6&lPantsed Enchant"
+      lore:
+        - "&7Apply Pantsed Level 1 to your leggings"
+        - "&73% chance to steal enemy pants"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 1400
+      enchant: pantsed
+      level: 1
+    pantsed-book-level-2:
+      material: ORANGE_DYE
+      name: "&6&lPantsed Level 2 Enchant"
+      lore:
+        - "&7Apply Pantsed Level 2 to your leggings"
+        - "&77% chance to steal enemy pants"
+        - ""
+        - "&7Requirements: &aCraft 1,000 pants"
+        - "&7Cost: &6{cost} souls"
+      cost: 2100
+      enchant: pantsed
+      level: 2
+    pantsed-book-level-3:
+      material: ORANGE_DYE
+      name: "&6&lPantsed Level 3 Enchant"
+      lore:
+        - "&7Apply Pantsed Level 3 to your leggings"
+        - "&712% chance to steal enemy pants"
+        - ""
+        - "&7Requirements: &aCraft 3,000 pants"
+        - "&7Cost: &6{cost} souls"
+      cost: 3500
+      enchant: pantsed
+      level: 3
+
+    detonate-book:
+      material: RED_DYE
+      name: "&c&lDetonate Enchant"
+      lore:
+        - "&7Apply Detonate Level 1 to your tool"
+        - "&7Mines blocks in a 2x2 area"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 2500
+      enchant: detonate
+      level: 1
+    detonate-book-level-2:
+      material: RED_DYE
+      name: "&c&lDetonate Level 2 Enchant"
+      lore:
+        - "&7Apply Detonate Level 2 to your tool"
+        - "&7Mines blocks in a 3x3 area"
+        - ""
+        - "&7Requirements: &aKill 50,000 creepers"
+        - "&7Cost: &6{cost} souls"
+      cost: 3750
+      enchant: detonate
+      level: 2
+    detonate-book-level-3:
+      material: RED_DYE
+      name: "&c&lDetonate Level 3 Enchant"
+      lore:
+        - "&7Apply Detonate Level 3 to your tool"
+        - "&7Mines blocks in a 5x5 area"
+        - ""
+        - "&7Requirements: &aKill 300,000 creepers"
+        - "&7Cost: &6{cost} souls"
+      cost: 6250
+      enchant: detonate
+      level: 3
+
+    almighty-push-book:
+      material: RED_DYE
+      name: "&c&lAlmighty Push Enchant"
+      lore:
+        - "&7Apply Almighty Push to your weapon"
+        - "&7Right-click to blast players away"
+        - ""
+        - "&7Cost: &6{cost} souls"
+      cost: 3000
+      enchant: almighty_push
+      level: 1
+
+    # MYSTICAL ENCHANTS (PAGE 2)
+    redemption-book:
+      material: PINK_DYE
+      name: "&d&lRedemption Enchant"
+      lore:
+        - "&7Apply Redemption to your gear"
+        - "&7Keep item on death (one-time use)"
+        - ""
+        - "&7Requirements: &aDefeat Redemption Boss"
+        - "&7Cost: &6{cost} souls"
+      cost: 10000
+      enchant: redemption
+      level: 1
+    zetsubo-book:
+      material: PINK_DYE
+      name: "&d&lZetsubo Enchant"
+      lore:
+        - "&7Apply Zetsubo Level 1 to your armor"
+        - "&7Gives Strength I (requires full set)"
+        - ""
+        - "&7Requirements: &aSpecial unlock"
+        - "&7Cost: &6{cost} souls"
+      cost: 15000
+      enchant: zetsubo
+      level: 1
+    zetsubo-book-level-2:
+      material: PINK_DYE
+      name: "&d&lZetsubo Level 2 Enchant"
+      lore:
+        - "&7Apply Zetsubo Level 2 to your armor"
+        - "&7Gives Strength II (requires full set)"
+        - ""
+        - "&7Requirements: &aTBD by admins"
+        - "&7Cost: &6{cost} souls"
+      cost: 25000
+      enchant: zetsubo
+      level: 2
+
+# Page system configuration
+page-system:
+  enabled: true
+  items-per-page: 35  # Leave room for navigation
+  max-pages: 2
+
+  # Navigation items
+  navigation:
+    next-page:
+      material: ARROW
+      name: "&a&lNext Page →"
+      lore:
+        - "&7View more enchants"
+        - ""
+        - "&eClick to navigate!"
+
+    previous-page:
+      material: ARROW
+      name: "&c&l← Previous Page"
+      lore:
+        - "&7Go back to previous page"
+        - ""
+        - "&eClick to navigate!"
+
+    page-info:
+      material: BOOK
+      name: "&6&lPage {current} of {total}"
+      lore:
+        - "&7Navigate between pages to"
+        - "&7view all available enchants"
+
+# Perk Shop Layout (slot positions in GUI)
+perk-shop-layout:
+  teleport-snowball: 10
+  grappling-hook: 11
+  snowman-egg: 12
+  spellbreaker: 13
+  tradeoff-egg: 14
+  worthy-sacrifice: 15
+  lovestruck: 16

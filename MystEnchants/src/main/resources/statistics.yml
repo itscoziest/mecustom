@@ -1,0 +1,381 @@
+# Unlock requirement types and their tracking
+unlock-requirements:
+  # Block-based requirements
+  BLOCKS_MINED:
+    track-blocks:
+      - STONE
+      - COBBLESTONE
+      - GRANITE
+      - DIORITE
+      - ANDESITE
+      - DEEPSLATE
+      - COAL_ORE
+      - DEEPSLATE_COAL_ORE
+      - IRON_ORE
+      - DEEPSLATE_IRON_ORE
+      - GOLD_ORE
+      - DEEPSLATE_GOLD_ORE
+      - DIAMOND_ORE
+      - DEEPSLATE_DIAMOND_ORE
+      - EMERALD_ORE
+      - DEEPSLATE_EMERALD_ORE
+      - LAPIS_ORE
+      - DEEPSLATE_LAPIS_ORE
+      - REDSTONE_ORE
+      - DEEPSLATE_REDSTONE_ORE
+      - COPPER_ORE
+      - DEEPSLATE_COPPER_ORE
+      - NETHER_QUARTZ_ORE
+      - NETHER_GOLD_ORE
+      - ANCIENT_DEBRIS
+      - NETHERRACK
+      - OBSIDIAN
+      - END_STONE
+      - BLACKSTONE
+      - BASALT
+      - CALCITE
+      - TUFF
+      - DRIPSTONE_BLOCK
+      - AMETHYST_BLOCK
+    message: "&7Blocks Mined: &f{current}&7/&f{required}"
+    anti-farm-protection: true
+    anti-farm-timer: 300 # seconds
+
+  BLOCKS_WALKED:
+    track-movement: true
+    minimum-distance: 1.0
+    require-on-ground: true
+    exclude-flying: true
+    exclude-elytra: true
+    message: "&7Blocks Walked: &f{current}&7/&f{required}"
+
+  WHEAT_BROKEN:
+    track-blocks:
+      - WHEAT
+    only-fully-grown: true
+    require-natural-growth: true
+    message: "&7Wheat Harvested: &f{current}&7/&f{required}"
+
+  # Entity-based requirements
+  CREEPERS_KILLED:
+    track-entities:
+      - CREEPER
+    require-player-kill: true
+    exclude-spawner-mobs: true
+    exclude-named-mobs: false
+    message: "&7Creepers Killed: &f{current}&7/&f{required}"
+
+  # Item-based requirements
+  IRON_INGOTS:
+    track-items:
+      - IRON_INGOT
+    trading-enabled: true
+    oracle-trading: true
+    villager-trading: true
+    message: "&7Iron Ingots Traded: &f{current}&7/&f{required}"
+
+  PANTS_CRAFTED:
+    track-crafting:
+      - LEATHER_LEGGINGS
+      - CHAINMAIL_LEGGINGS
+      - IRON_LEGGINGS
+      - GOLDEN_LEGGINGS
+      - DIAMOND_LEGGINGS
+      - NETHERITE_LEGGINGS
+    count-shift-click: true
+    require-manual-craft: false
+    message: "&7Pants Crafted: &f{current}&7/&f{required}"
+
+  # Currency-based requirements
+  SOULS:
+    currency-type: SOULS
+    track-collection: true
+    include-mob-kills: true
+    include-player-kills: true
+    message: "&7Souls Collected: &f{current}&7/&f{required}"
+
+  MONEY:
+    currency-type: VAULT
+    require-vault: true
+    message: "&7Money Required: &a${required}"
+
+  EXP_LEVELS:
+    currency-type: EXP
+    require-exact-levels: true
+    message: "&7EXP Levels Required: &a{required}"
+
+  # Special requirements
+  BOSS_FIGHT:
+    special-type: REDEMPTION_BOSS
+    require-completion: true
+    allow-spectating: true
+    message: "&7Defeat the Redemption Boss"
+
+  TBD:
+    special-type: TO_BE_DETERMINED
+    admin-only: true
+    message: "&7To be determined by server admins"
+
+  NONE:
+    no-requirement: true
+    message: "&7No requirements"
+
+# Statistics tracking configuration
+tracking:
+  # How often to save statistics (in ticks)
+  save-interval: 6000 # 5 minutes
+
+  # Batch operations for performance
+  batch-size: 50
+  batch-timeout: 100 # ticks
+
+  # Enable/disable specific tracking
+  track-blocks-mined: true
+  track-blocks-walked: true
+  track-entities-killed: true
+  track-items-crafted: true
+  track-items-traded: true
+  track-souls-collected: true
+  track-enchants-unlocked: true
+
+  # Block tracking settings
+  blocks:
+    # Only count blocks broken with proper tools
+    require-proper-tool: true
+    # Don't count blocks placed by players recently
+    anti-farm-timer: 300 # 5 minutes
+    # Track specific materials only
+    whitelist-mode: true
+    # Exclude creative mode
+    exclude-creative: true
+    # Exclude spectator mode
+    exclude-spectator: true
+
+  # Movement tracking settings
+  movement:
+    # Minimum distance to count (prevents spam)
+    minimum-distance: 1.0
+    # Only count movement on ground
+    require-on-ground: true
+    # Track time between movements
+    movement-timeout: 1000 # milliseconds
+    # Exclude teleportation
+    exclude-teleport: true
+    # Exclude vehicle movement
+    exclude-vehicles: true
+
+  # Entity tracking settings
+  entities:
+    # Only count entities killed by player directly
+    require-player-kill: true
+    # Don't count spawner mobs
+    exclude-spawner-mobs: true
+    # Don't count named mobs (pets)
+    exclude-named-mobs: false
+    # Track kill method
+    track-kill-method: true
+    # Require minimum damage dealt
+    minimum-damage-percent: 80
+
+  # Crafting tracking settings
+  crafting:
+    # Count shift-click crafting
+    count-shift-click: true
+    # Only count manual crafting
+    require-manual-craft: false
+    # Track crafting location
+    track-location: false
+
+  # Trading tracking settings
+  trading:
+    # Track villager trades
+    track-villager-trades: true
+    # Track player trades
+    track-player-trades: false
+    # Require oracle interface
+    require-oracle-interface: false
+
+# Progress display settings
+progress-display:
+  # Show progress in chat when milestone reached
+  milestone-notifications: true
+  milestone-percentages: [10, 25, 50, 75, 90, 95]
+
+  # Show progress in action bar
+  actionbar-progress: true
+  actionbar-interval: 100 # ticks
+  actionbar-format: "&7Progress: &6{enchant} {level} &7- &f{percentage}% &7({current}/{max})"
+
+  # Progress bar format - Enhanced with current/max placeholder
+  progress-bar:
+    length: 20
+    completed-char: "█"
+    incomplete-char: "░"
+    format: "&7[{bar}&7] &f{percentage}% &7({current}/{max})"
+    colors:
+      low: "&c" # 0-25%
+      medium: "&e" # 25-75%
+      high: "&a" # 75-100%
+
+  # Alternative formats for different contexts
+  formats:
+    # Format for enchant details GUI
+    enchant-details: "&7Progress: &f{percentage}% &7({current}/{max})"
+    # Format for milestone notifications
+    milestone: "&7Progress: &6{percentage}% &7- &f{current}&7/&f{max}"
+    # Format for requirements display
+    requirement: "&7{current}&7/&f{max} &7({percentage}%)"
+    # Compact format for limited space
+    compact: "&f{current}&7/&f{max}"
+
+  # Number formatting settings
+  number-formatting:
+    # Use K, M, B suffixes for large numbers
+    use-suffixes: true
+    # Decimal places for suffixes
+    decimal-places: 1
+    # Threshold for using suffixes
+    suffix-threshold: 1000
+
+  # Notification messages - Enhanced with placeholders
+  milestone-message: "&a&l[MystEnchants] &7You've reached &6{percentage}% &7progress on &6{enchant} &7level &6{level}&7! &f({current}/{max})"
+  completion-message: "&a&l[MystEnchants] &7You can now unlock &6{enchant} &7level &6{level}&7! &f({current}/{max})"
+
+  # Sound effects for progress
+  milestone-sound: ENTITY_PLAYER_LEVELUP
+  completion-sound: UI_TOAST_CHALLENGE_COMPLETE
+
+# Requirement validation
+validation:
+  # Check requirements on login
+  check-on-login: true
+  # Check requirements periodically
+  periodic-check: true
+  periodic-interval: 12000 # 10 minutes in ticks
+
+  # Auto-unlock when requirements met
+  auto-unlock: false
+  auto-unlock-notification: true
+
+# Leaderboards
+leaderboards:
+  enabled: true
+  update-interval: 1200 # 1 minute in ticks
+  max-entries: 100
+
+  # Which statistics to track for leaderboards
+  tracked-stats:
+    blocks_mined:
+      display-name: "&6Top Miners"
+      format: "&7{rank}. &f{player} &7- &6{value} blocks"
+    blocks_walked:
+      display-name: "&6Top Walkers"
+      format: "&7{rank}. &f{player} &7- &6{value} blocks"
+    creepers_killed:
+      display-name: "&6Creeper Slayers"
+      format: "&7{rank}. &f{player} &7- &6{value} creepers"
+    souls_collected:
+      display-name: "&6Soul Collectors"
+      format: "&7{rank}. &f{player} &7- &6{value} souls"
+    enchants_unlocked:
+      display-name: "&6Enchant Masters"
+      format: "&7{rank}. &f{player} &7- &6{value} enchants"
+    wheat_broken:
+      display-name: "&6Farmers"
+      format: "&7{rank}. &f{player} &7- &6{value} wheat"
+    iron_ingots_traded:
+      display-name: "&6Iron Traders"
+      format: "&7{rank}. &f{player} &7- &6{value} ingots"
+    pants_crafted:
+      display-name: "&6Tailors"
+      format: "&7{rank}. &f{player} &7- &6{value} pants"
+
+  # Leaderboard GUI settings
+  gui:
+    title: "&6&lLeaderboards"
+    size: 54
+    update-interval: 600 # 30 seconds in ticks
+    items-per-page: 45
+
+# Data cleanup settings
+cleanup:
+  # Remove inactive player data
+  remove-inactive-players: true
+  inactive-threshold: 2592000000 # 30 days in milliseconds
+
+  # Archive old statistics
+  archive-old-data: false
+  archive-threshold: 7776000000 # 90 days in milliseconds
+
+  # Cleanup interval
+  cleanup-interval: 86400000 # 1 day in milliseconds
+
+# Performance optimization
+performance:
+  # Use async operations
+  async-operations: true
+
+  # Cache frequently accessed data
+  cache-enabled: true
+  cache-size: 1000
+  cache-ttl: 300000 # 5 minutes in milliseconds
+
+  # Batch database updates
+  batch-updates: true
+  batch-size: 50
+  batch-interval: 100 # ticks
+
+  # Statistics update frequency
+  update-frequency:
+    blocks-mined: 1 # Every block
+    blocks-walked: 5 # Every 5 blocks
+    entities-killed: 1 # Every kill
+    items-crafted: 1 # Every craft
+    souls-collected: 1 # Every soul
+
+# Debug and logging
+debug:
+  # Enable debug logging
+  enabled: false
+
+  # Log level (INFO, WARN, ERROR)
+  log-level: INFO
+
+  # Log specific events
+  log-milestone-reached: true
+  log-requirement-completed: true
+  log-statistic-updates: false
+  log-database-operations: false
+
+  # Performance monitoring
+  monitor-performance: true
+  log-slow-operations: true
+  slow-operation-threshold: 1000 # milliseconds
+
+# Compatibility settings
+compatibility:
+  # WorldGuard integration
+  worldguard:
+    enabled: false
+    respect-build-flag: true
+    respect-pvp-flag: true
+
+  # Factions integration
+  factions:
+    enabled: false
+    track-in-wilderness: true
+    track-in-own-territory: true
+    track-in-enemy-territory: false
+
+  # Towny integration
+  towny:
+    enabled: false
+    track-in-wilderness: true
+    track-in-own-town: true
+    track-in-other-towns: false
+
+  # GriefPrevention integration
+  griefprevention:
+    enabled: false
+    track-in-claims: true
+    track-outside-claims: true

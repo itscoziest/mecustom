@@ -15,11 +15,21 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Sound;
 import org.bukkit.Material;
 
-
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.ChatColor;
+import org.bukkit.Sound;
+import com.mystenchants.enchants.CustomEnchant;
+import com.mystenchants.utils.ColorUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.NamespacedKey;
 
 /**
  * Handles GUI interactions
@@ -40,12 +50,19 @@ public class InventoryClickListener implements Listener {
         String title = ChatColor.stripColor(event.getView().getTitle());
         ItemStack clickedItem = event.getCurrentItem();
 
-        if (clickedItem == null || !clickedItem.hasItemMeta()) {
-            // For GUI inventories, still cancel the event even if no item
-            if (isGuiInventory(title)) {
-                event.setCancelled(true);
+        // ADD THIS FOR SOUL SHOP
+        if (title.equals("Soul Shop") || title.contains("Soul Shop")) {
+            event.setCancelled(true);
+
+            if (clickedItem != null && clickedItem.hasItemMeta()) {
+                PersistentDataContainer container = clickedItem.getItemMeta().getPersistentDataContainer();
+                NamespacedKey soulShopKey = new NamespacedKey(plugin, "soul_shop_item");
+
+                if (container.has(soulShopKey, PersistentDataType.STRING)) {
+                    handleSoulShopPurchase(player, clickedItem);
+                    return;
+                }
             }
-            return;
         }
 
         ItemMeta meta = clickedItem.getItemMeta();
@@ -240,6 +257,101 @@ public class InventoryClickListener implements Listener {
             }
         }
     }
+
+
+    /**
+     * COMPLETE: Handle soul shop purchases
+     */
+    private void handleSoulShopPurchase(Player player, ItemStack clickedItem) {
+        if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+
+        ItemMeta meta = clickedItem.getItemMeta();
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        NamespacedKey soulShopKey = new NamespacedKey(plugin, "soul_shop_item");
+        NamespacedKey levelKey = new NamespacedKey(plugin, "soul_shop_level");
+        NamespacedKey costKey = new NamespacedKey(plugin, "soul_shop_cost");
+        NamespacedKey purchasableKey = new NamespacedKey(plugin, "soul_shop_purchasable");
+
+        if (!container.has(soulShopKey, PersistentDataType.STRING)) return;
+
+        String enchantName = container.get(soulShopKey, PersistentDataType.STRING);
+        int level = container.getOrDefault(levelKey, PersistentDataType.INTEGER, 1);
+        int cost = container.getOrDefault(costKey, PersistentDataType.INTEGER, 500);
+        boolean isPurchasable = container.getOrDefault(purchasableKey, PersistentDataType.BYTE, (byte) 0) == 1;
+
+        plugin.getLogger().info("Soul shop click: " + enchantName + " Level " + level + ", Cost: " + cost + ", Purchasable: " + isPurchasable);
+
+        if (!isPurchasable) {
+            player.sendMessage(ColorUtils.color("&cYou cannot purchase this enchant yet!"));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            return;
+        }
+
+        // Check if player has enough souls
+        long playerSouls = plugin.getSoulManager().getSouls(player.getUniqueId()).join();
+        if (playerSouls < cost) {
+            player.sendMessage(ColorUtils.color("&cYou need " + (cost - playerSouls) + " more souls!"));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            return;
+        }
+
+        // Get the enchant
+        CustomEnchant enchant = plugin.getEnchantManager().getEnchant(enchantName);
+        if (enchant == null) {
+            player.sendMessage(ColorUtils.color("&cEnchant not found!"));
+            return;
+        }
+
+        // Check requirements one more time
+        try {
+            boolean meetsRequirements = plugin.getEnchantManager().meetsRequirements(player, enchantName, level).join();
+            if (!meetsRequirements) {
+                player.sendMessage(ColorUtils.color("&cYou don't meet the requirements for this enchant!"));
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                return;
+            }
+        } catch (Exception e) {
+            player.sendMessage(ColorUtils.color("&cError checking requirements!"));
+            return;
+        }
+
+        // Deduct souls
+        plugin.getSoulManager().removeSouls(player.getUniqueId(), cost);
+
+        // Update player data FIRST
+        plugin.getPlayerDataManager().setEnchantLevel(player.getUniqueId(), enchantName, level);
+
+        // Give enchant book to player
+        ItemStack enchantBook = plugin.getEnchantManager().createEnchantDye(enchant, level);
+
+        // Try to add to inventory
+        HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(enchantBook);
+        if (!leftover.isEmpty()) {
+            // Drop on ground if inventory full
+            for (ItemStack item : leftover.values()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), item);
+            }
+            player.sendMessage(ColorUtils.color("&7Some items were dropped on the ground (inventory full)"));
+        }
+
+        // Success message
+        player.sendMessage(ColorUtils.color("&a&lPURCHASED! &7" + enchant.getDisplayName() + " Level " + level + " for " + cost + " souls"));
+
+        // Play success sound
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
+
+        // REFRESH THE GUI instead of closing
+        String currentTitle = player.getOpenInventory().getTitle();
+        if (currentTitle.contains("Page 2")) {
+            player.openInventory(plugin.getGuiManager().createSoulShopPage2Gui(player));
+        } else {
+            player.openInventory(plugin.getGuiManager().createSoulShopGui(player));
+        }
+
+        plugin.getLogger().info("Player " + player.getName() + " purchased " + enchantName + " Level " + level + " for " + cost + " souls");
+    }
+
 
     /**
      * FIXED: Handle soul shop clicks with proper debugging and purchase logic

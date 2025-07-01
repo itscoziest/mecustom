@@ -17,6 +17,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.NamespacedKey;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -947,17 +951,37 @@ public class GuiManager {
         }
 
         // UNCHANGED: Use tier material, don't change to green when purchased
-        Material bookMaterial = enchant.getTier().getGuiItem();
+        Material bookMaterial;
+        if (isPurchasable || (currentLevel != null && currentLevel >= level)) {
+            bookMaterial = enchant.getTier().getGuiItem(); // AVAILABLE OR OWNED = TIER COLOR
+        } else {
+            bookMaterial = Material.GRAY_DYE; // LOCKED = GRAY
+        }
 
         ItemStack book = createItemStack(bookMaterial, ColorUtils.color(itemName), lore);
 
-        // Add glow effect for available items only
-        if (isPurchasable) {
-            ItemMeta meta = book.getItemMeta();
-            if (meta != null) {
+// CRITICAL: Add persistent data for soul shop purchases
+        ItemMeta meta = book.getItemMeta();
+        if (meta != null) {
+            PersistentDataContainer container = meta.getPersistentDataContainer();
+
+            NamespacedKey soulShopKey = new NamespacedKey(plugin, "soul_shop_item");
+            container.set(soulShopKey, PersistentDataType.STRING, enchant.getName());
+
+            NamespacedKey levelKey = new NamespacedKey(plugin, "soul_shop_level");
+            container.set(levelKey, PersistentDataType.INTEGER, level);
+
+            NamespacedKey costKey = new NamespacedKey(plugin, "soul_shop_cost");
+            container.set(costKey, PersistentDataType.INTEGER, cost);
+
+            NamespacedKey purchasableKey = new NamespacedKey(plugin, "soul_shop_purchasable");
+            container.set(purchasableKey, PersistentDataType.BYTE, (byte) (isPurchasable ? 1 : 0));
+
+            if (isPurchasable) {
                 meta.addEnchant(org.bukkit.enchantments.Enchantment.LUCK, 1, true);
-                book.setItemMeta(meta);
             }
+
+            book.setItemMeta(meta);
         }
 
         return book;

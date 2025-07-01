@@ -40,10 +40,20 @@ public class EnchantApplyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!args[1].equalsIgnoreCase("give")) {
+
+
+
+
+        if (!args[1].equalsIgnoreCase("give") && !args[1].equalsIgnoreCase("debug")) {
             sender.sendMessage(ColorUtils.color("&cUsage: /enchant <player> give <enchant> <level>"));
             return true;
         }
+
+        if (args[1].equalsIgnoreCase("debug")) {
+            sender.sendMessage(ColorUtils.color("&eDebug command not implemented yet"));
+            return true;
+        }
+
 
         String targetName = args[0];
         String enchantName = args[2];
@@ -99,6 +109,7 @@ public class EnchantApplyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+
         // Check permissions for bypassing unlock requirements
         boolean canBypass = sender.hasPermission("mystenchants.admin") || sender.hasPermission("mystenchants.enchant.bypass");
 
@@ -126,6 +137,9 @@ public class EnchantApplyCommand implements CommandExecutor, TabCompleter {
 
         return true;
     }
+
+
+
 
     /**
      * Applies the enchant to the player's held item

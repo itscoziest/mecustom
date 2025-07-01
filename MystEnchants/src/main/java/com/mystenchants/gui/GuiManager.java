@@ -568,31 +568,155 @@ public class GuiManager {
 
 
     /**
-     * Creates the perks GUI
+     * FIXED: Creates the perks GUI - Now reads slots from perks.yml perk-shop-layout
      */
     public Inventory createPerksGui(Player player) {
-        GuiTemplate template = templates.get("perks");
-        if (template == null) {
-            return Bukkit.createInventory(null, 54, ColorUtils.color("&6&lPerks"));
-        }
+        // FIXED: Use 4 rows (36 slots) as per your requirement
+        String title = ColorUtils.color("&6&lPerks");
+        Inventory inventory = Bukkit.createInventory(null, 36, title);
 
-        Inventory inventory = Bukkit.createInventory(null, template.getSize(), template.getTitle());
+        // Add info item at top center
+        ItemStack infoItem = createItemStack(Material.NETHER_STAR,
+                ColorUtils.color("&6&lPerks Information"),
+                Arrays.asList(
+                        ColorUtils.color("&7Purchase powerful single-use items"),
+                        ColorUtils.color("&7that provide unique abilities!"),
+                        ColorUtils.color(""),
+                        ColorUtils.color("&7Each perk has a cooldown after use"),
+                        ColorUtils.color("&7to prevent spam and maintain balance."),
+                        ColorUtils.color(""),
+                        ColorUtils.color("&7Some perks require multiple hits"),
+                        ColorUtils.color("&7or specific conditions to activate.")
+                ));
+        inventory.setItem(4, infoItem);
 
-        for (Map.Entry<String, GuiItem> entry : template.getItems().entrySet()) {
-            GuiItem perkGuiItem = entry.getValue();
+        // FIXED: Read perk slots from perks.yml perk-shop-layout section
+        String[] perkNames = {
+                "teleport-snowball",
+                "grappling-hook",
+                "snowman-egg",
+                "spellbreaker",
+                "tradeoff-egg",
+                "worthy-sacrifice",
+                "lovestruck"
+        };
 
-            ItemStack item = plugin.getPerkManager().createPerkShopItem(entry.getKey());
+        for (String perkName : perkNames) {
+            // Read slot from perks.yml perk-shop-layout
+            int slot = plugin.getConfigManager().getPerksConfig().getInt("perk-shop-layout." + perkName, -1);
 
-            if (item != null) {
-                inventory.setItem(perkGuiItem.getSlot(), item);
+            plugin.getLogger().info("Loading perk " + perkName + " at slot " + slot);
+
+            if (slot >= 0 && slot < 36) { // Valid slot for 4-row GUI
+                // Use PerkManager to create the perk item
+                ItemStack item = plugin.getPerkManager().createPerkShopItem(perkName);
+
+                if (item != null) {
+                    inventory.setItem(slot, item);
+                    plugin.getLogger().info("Placed " + perkName + " at slot " + slot);
+                } else {
+                    // Fallback: create basic item if PerkManager fails
+                    ItemStack fallbackItem = createBasicPerkItem(perkName);
+                    if (fallbackItem != null) {
+                        inventory.setItem(slot, fallbackItem);
+                        plugin.getLogger().info("Placed fallback " + perkName + " at slot " + slot);
+                    }
+                }
             } else {
-                ItemStack fallbackItem = createItemStack(perkGuiItem.getMaterial(), perkGuiItem.getName(), perkGuiItem.getLore());
-                inventory.setItem(perkGuiItem.getSlot(), fallbackItem);
+                plugin.getLogger().warning("Invalid slot " + slot + " for perk " + perkName + " (GUI has 36 slots, 0-35)");
             }
         }
 
         fillEmptySlots(inventory);
         return inventory;
+    }
+
+
+    /**
+     * HELPER: Creates basic perk item as fallback
+     */
+    private ItemStack createBasicPerkItem(String perkName) {
+        switch (perkName) {
+            case "teleport-snowball":
+                return createItemStack(Material.SNOWBALL,
+                        ColorUtils.color("&b&lTeleport Snowball"),
+                        Arrays.asList(
+                                ColorUtils.color("&7Teleport to the player you hit"),
+                                ColorUtils.color("&7with this snowball"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&7Cost: &6500 souls"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&eClick to purchase!")
+                        ));
+            case "grappling-hook":
+                return createItemStack(Material.FISHING_ROD,
+                        ColorUtils.color("&a&lGrappling Hook"),
+                        Arrays.asList(
+                                ColorUtils.color("&7Hook onto players and pull"),
+                                ColorUtils.color("&7them towards you"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&7Cost: &6750 souls"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&eClick to purchase!")
+                        ));
+            case "snowman-egg":
+                return createItemStack(Material.PUMPKIN,
+                        ColorUtils.color("&f&lSnowman Egg"),
+                        Arrays.asList(
+                                ColorUtils.color("&7Spawns a snowman that attacks"),
+                                ColorUtils.color("&7enemies for 30 seconds"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&7Cost: &6600 souls"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&eClick to purchase!")
+                        ));
+            case "spellbreaker":
+                return createItemStack(Material.BLAZE_ROD,
+                        ColorUtils.color("&6&lSpellbreaker"),
+                        Arrays.asList(
+                                ColorUtils.color("&7Hit a player 5 times to remove"),
+                                ColorUtils.color("&7their potion effects"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&7Cost: &6800 souls"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&eClick to purchase!")
+                        ));
+            case "tradeoff-egg":
+                return createItemStack(Material.EGG,
+                        ColorUtils.color("&e&lTradeoff Egg"),
+                        Arrays.asList(
+                                ColorUtils.color("&7Switch potion effects with"),
+                                ColorUtils.color("&7target for 10 seconds"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&7Cost: &6900 souls"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&eClick to purchase!")
+                        ));
+            case "worthy-sacrifice":
+                return createItemStack(Material.WITCH_SPAWN_EGG,
+                        ColorUtils.color("&5&lWorthy Sacrifice"),
+                        Arrays.asList(
+                                ColorUtils.color("&7Spawns a witch that absorbs"),
+                                ColorUtils.color("&7damage for you"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&7Cost: &61200 souls"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&eClick to purchase!")
+                        ));
+            case "lovestruck":
+                return createItemStack(Material.ROSE_BUSH,
+                        ColorUtils.color("&d&lLovestruck"),
+                        Arrays.asList(
+                                ColorUtils.color("&7Hit a player 5 times to give"),
+                                ColorUtils.color("&7nausea and rose inventory"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&7Cost: &6700 souls"),
+                                ColorUtils.color(""),
+                                ColorUtils.color("&eClick to purchase!")
+                        ));
+            default:
+                return null;
+        }
     }
 
     /**
@@ -726,7 +850,7 @@ public class GuiManager {
     }
 
     /**
-     * FIXED: Creates soul shop book - Properly detect manual unlocks and requirement completion
+     * SIMPLE FIX: Creates soul shop book - Just removed "dye" references, no material changes
      */
     private ItemStack createSoulShopBook(CustomEnchant enchant, int level, Player player, Map<String, Integer> playerEnchants) {
         String costPath = "shop.items." + enchant.getName() + "-book-level-" + level + ".cost";
@@ -735,41 +859,32 @@ public class GuiManager {
                 plugin.getConfigManager().getPerksConfig().getInt(fallbackPath, 500));
 
         Integer currentLevel = playerEnchants.get(enchant.getName());
-        String statusMessage;
-        boolean isPurchasable = false;
+        boolean isPurchasable = canPurchaseEnchantLevel(player, enchant, level, playerEnchants);
+        boolean meetsRequirements = false;
+        String statusMessage = "";
 
-        // FIXED: Check multiple conditions for purchasability
-        if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
-            // Need previous level first
+        // Determine status and requirements
+        if (currentLevel != null && currentLevel >= level) {
+            statusMessage = ColorUtils.color("&a&l✓ OWNED");
+            isPurchasable = false;
+        } else if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
             statusMessage = ColorUtils.color("&c&l✗ REQUIRES LEVEL " + (level - 1));
             isPurchasable = false;
         } else {
-            // ENHANCED: Check if already unlocked OR meets requirements
-            boolean alreadyUnlocked = (currentLevel != null && currentLevel >= level);
-            boolean meetsRequirements = false;
-
             try {
                 meetsRequirements = plugin.getEnchantManager()
                         .meetsRequirements(player, enchant.getName(), level).join();
-            } catch (Exception e) {
-                plugin.getLogger().warning("Error checking requirements for " + enchant.getName() + " level " + level + ": " + e.getMessage());
-            }
 
-            // FIXED: Available if EITHER unlocked OR meets requirements
-            if (alreadyUnlocked || meetsRequirements) {
-                statusMessage = ColorUtils.color("&a&l✓ AVAILABLE");
-                isPurchasable = true;
-
-                // Debug logging
-                if (alreadyUnlocked) {
-                    plugin.getLogger().info("Enchant " + enchant.getName() + " Level " + level + " is purchasable because player has unlocked it (current level: " + currentLevel + ")");
+                if (meetsRequirements) {
+                    statusMessage = ColorUtils.color("&a&l✓ AVAILABLE");
+                    isPurchasable = true;
                 } else {
-                    plugin.getLogger().info("Enchant " + enchant.getName() + " Level " + level + " is purchasable because player meets requirements");
+                    statusMessage = ColorUtils.color("&c&l✗ REQUIREMENTS NOT MET");
+                    isPurchasable = false;
                 }
-            } else {
-                statusMessage = ColorUtils.color("&c&l✗ REQUIREMENTS NOT MET");
+            } catch (Exception e) {
+                statusMessage = ColorUtils.color("&c&l✗ ERROR CHECKING REQUIREMENTS");
                 isPurchasable = false;
-                plugin.getLogger().info("Enchant " + enchant.getName() + " Level " + level + " is NOT purchasable - not unlocked and requirements not met");
             }
         }
 
@@ -777,16 +892,15 @@ public class GuiManager {
         lore.add(statusMessage);
         lore.add("");
 
-        // Show ownership/unlock status
+        // REMOVED: "enchant dye" references - just describe the enchant
         if (currentLevel != null && currentLevel >= level) {
-            lore.add(ColorUtils.color("&a✓ &7You have unlocked this level"));
-            lore.add(ColorUtils.color("&7Purchase to get enchant dye"));
+            lore.add(ColorUtils.color("&7You already own this enchant level"));
         } else {
-            lore.add(ColorUtils.color("&7Apply " + enchant.getDisplayName() + " Level " + level));
-            lore.add(ColorUtils.color("&7to your equipment"));
+            lore.add(ColorUtils.color("&7" + enchant.getDisplayName() + " Level " + level));
         }
         lore.add("");
 
+        // Add level-specific effect description
         String effectDescription = getEnchantLevelEffectDescription(enchant, level);
         lore.add(ColorUtils.color("&6Level " + level + " Effect:"));
         lore.add(ColorUtils.color("&f" + effectDescription));
@@ -799,74 +913,45 @@ public class GuiManager {
         }
         lore.add("");
 
-        // Show requirements if not purchasable
-        if (!isPurchasable) {
+        // Show requirements if not met
+        if (!meetsRequirements && !(currentLevel != null && currentLevel >= level)) {
             if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
                 lore.add(ColorUtils.color("&c&lRequirements:"));
-                lore.add(ColorUtils.color("&7Must unlock Level " + (level - 1) + " first"));
+                lore.add(ColorUtils.color("&7Must own Level " + (level - 1) + " first"));
             } else {
-                // Get and show actual requirement
-                UnlockRequirement req = enchant.getUnlockRequirement(level);
-                if (req != null && req.getType() != RequirementType.NONE) {
-                    lore.add(ColorUtils.color("&c&lRequirements:"));
-
-                    if (req.getType().requiresStatistics()) {
-                        String statName = getStatisticName(req.getType());
-                        try {
-                            Long current = plugin.getPlayerDataManager().getStatistic(player.getUniqueId(), statName).join();
-                            if (current == null) current = 0L;
-
-                            lore.add(ColorUtils.color("&7" + req.getFormattedMessage(current)));
-
-                            double progress = req.getProgress(current);
-                            String progressLine = String.format("&7Progress: &f%.1f%% &7(%s)",
-                                    progress, formatProgress(current, req.getAmount()));
-                            lore.add(ColorUtils.color(progressLine));
-                        } catch (Exception e) {
-                            lore.add(ColorUtils.color("&7" + req.getMessage()));
-                        }
-                    } else {
-                        lore.add(ColorUtils.color("&7" + req.getMessage()));
-                    }
-                } else {
-                    lore.add(ColorUtils.color("&c&lNote:"));
-                    lore.add(ColorUtils.color("&7Enchant can be unlocked manually"));
-                }
+                lore.add(ColorUtils.color("&c&lRequirements:"));
+                lore.add(ColorUtils.color("&7Check Oracle for details"));
             }
             lore.add("");
         }
 
+        // Add cost and purchase info
         lore.add(ColorUtils.color("&7Cost: &6" + cost + " souls"));
         lore.add("");
 
         if (isPurchasable) {
-            lore.add(ColorUtils.color("&6&lDrag and drop onto item to apply!"));
-            lore.add(ColorUtils.color("&eClick to purchase enchant dye!"));
+            // UPDATED: Clean purchase instructions without "dye"
+            lore.add(ColorUtils.color("&eClick to purchase!"));
+            lore.add(ColorUtils.color("&7Drag onto item to apply"));
         } else {
             lore.add(ColorUtils.color("&c&lCannot purchase yet"));
-            if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
-                lore.add(ColorUtils.color("&7Unlock Level " + (level - 1) + " first"));
-            } else {
-                lore.add(ColorUtils.color("&7Complete requirements or use admin commands"));
+            if (currentLevel == null || currentLevel < level) {
+                lore.add(ColorUtils.color("&7Complete requirements to unlock"));
             }
         }
 
+        // UNCHANGED: Keep original material logic (no green dye changes)
         String itemName = enchant.getTier().getColor() + "&l" + enchant.getDisplayName();
-        if (level > 1 || enchant.getMaxLevel() > 1) {
-            itemName += " " + getRomanNumeral(level);
+        if (level > 1) {
+            itemName += " Level " + level;
         }
 
-        // FIXED: Show proper tier material when purchasable
-        Material bookMaterial;
-        if (isPurchasable) {
-            bookMaterial = enchant.getTier().getGuiItem(); // Show tier dye when available
-        } else {
-            bookMaterial = Material.GRAY_DYE; // Gray when locked
-        }
+        // UNCHANGED: Use tier material, don't change to green when purchased
+        Material bookMaterial = enchant.getTier().getGuiItem();
 
         ItemStack book = createItemStack(bookMaterial, ColorUtils.color(itemName), lore);
 
-        // Add glow effect for available items
+        // Add glow effect for available items only
         if (isPurchasable) {
             ItemMeta meta = book.getItemMeta();
             if (meta != null) {

@@ -17,7 +17,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
- * ENHANCED: Handles passive enchant effects with immediate application/removal
+ * FIXED: Handles passive enchant effects with immediate application/removal
  */
 public class EnchantListener implements Listener {
 
@@ -111,19 +111,19 @@ public class EnchantListener implements Listener {
     }
 
     /**
-     * ENHANCED: Applies all passive enchant effects to a player with immediate effect
+     * FIXED: Applies all passive enchant effects to a player with immediate effect
      */
     public void applyPassiveEffects(Player player) {
         // Clear ALL custom effects first to ensure clean state
         removeCustomEffects(player);
 
-        // Apply Tempo (haste) from tools
+        // FIXED: Apply Tempo (haste) from tools - check specifically for tempo
         checkAndApplyTempo(player);
 
-        // Apply Pace (speed) from boots
+        // FIXED: Apply Pace (speed) from boots - check specifically for pace
         checkAndApplyPace(player);
 
-        // Apply Zetsubo (strength) - requires full armor set
+        // FIXED: Apply Zetsubo (strength) - requires full armor set with zetsubo
         checkAndApplyZetsubo(player);
     }
 
@@ -157,34 +157,32 @@ public class EnchantListener implements Listener {
     private void checkAndApplyTempo(Player player) {
         ItemStack mainHand = player.getInventory().getItemInMainHand();
 
-        if (mainHand != null && plugin.getEnchantManager().hasCustomEnchant(mainHand)) {
-            CustomEnchant enchant = plugin.getEnchantManager().getCustomEnchant(mainHand);
+        // FIXED: Check specifically for Tempo enchant
+        if (mainHand != null && plugin.getEnchantManager().hasSpecificCustomEnchant(mainHand, "tempo")) {
+            int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(mainHand, "tempo");
+            int hasteLevel = plugin.getEnchantManager().getTempoHasteLevel(level);
 
-            if (enchant != null && enchant.getName().equals("tempo")) {
-                int level = plugin.getEnchantManager().getCustomEnchantLevel(mainHand);
-                int hasteLevel = plugin.getEnchantManager().getTempoHasteLevel(level);
+            plugin.getLogger().info("TEMPO ENCHANT DETECTED! Level: " + level + ", Haste Level: " + hasteLevel + " on " + mainHand.getType());
 
-                // Apply infinite duration haste effect
-                player.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING,
-                        Integer.MAX_VALUE, hasteLevel - 1, false, false, false));
-            }
+            // Apply infinite duration haste effect
+            player.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING,
+                    Integer.MAX_VALUE, hasteLevel - 1, false, false, false));
         }
     }
 
     private void checkAndApplyPace(Player player) {
         ItemStack boots = player.getInventory().getBoots();
 
-        if (boots != null && plugin.getEnchantManager().hasCustomEnchant(boots)) {
-            CustomEnchant enchant = plugin.getEnchantManager().getCustomEnchant(boots);
+        // FIXED: Check specifically for Pace enchant
+        if (boots != null && plugin.getEnchantManager().hasSpecificCustomEnchant(boots, "pace")) {
+            int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(boots, "pace");
+            int speedLevel = plugin.getEnchantManager().getPaceSpeedLevel(level);
 
-            if (enchant != null && enchant.getName().equals("pace")) {
-                int level = plugin.getEnchantManager().getCustomEnchantLevel(boots);
-                int speedLevel = plugin.getEnchantManager().getPaceSpeedLevel(level);
+            plugin.getLogger().info("PACE ENCHANT DETECTED! Level: " + level + ", Speed Level: " + speedLevel + " on " + boots.getType());
 
-                // Apply infinite duration speed effect
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,
-                        Integer.MAX_VALUE, speedLevel - 1, false, false, false));
-            }
+            // Apply infinite duration speed effect
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,
+                    Integer.MAX_VALUE, speedLevel - 1, false, false, false));
         }
     }
 
@@ -194,7 +192,7 @@ public class EnchantListener implements Listener {
         ItemStack leggings = player.getInventory().getLeggings();
         ItemStack boots = player.getInventory().getBoots();
 
-        // Check if all armor pieces have Zetsubo enchant
+        // FIXED: Check if all armor pieces have Zetsubo enchant specifically
         if (hasZetsuboEnchant(helmet) && hasZetsuboEnchant(chestplate) &&
                 hasZetsuboEnchant(leggings) && hasZetsuboEnchant(boots)) {
 
@@ -207,6 +205,8 @@ public class EnchantListener implements Listener {
             if (minLevel > 0) {
                 int strengthLevel = plugin.getEnchantManager().getZetsuboStrengthLevel(minLevel);
 
+                plugin.getLogger().info("ZETSUBO FULL SET DETECTED! Min Level: " + minLevel + ", Strength Level: " + strengthLevel);
+
                 // Apply infinite duration strength effect
                 player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,
                         Integer.MAX_VALUE, strengthLevel - 1, false, false, false));
@@ -217,17 +217,13 @@ public class EnchantListener implements Listener {
     private boolean hasZetsuboEnchant(ItemStack item) {
         if (item == null) return false;
 
-        if (plugin.getEnchantManager().hasCustomEnchant(item)) {
-            CustomEnchant enchant = plugin.getEnchantManager().getCustomEnchant(item);
-            return enchant != null && enchant.getName().equals("zetsubo");
-        }
-
-        return false;
+        // FIXED: Check specifically for Zetsubo enchant
+        return plugin.getEnchantManager().hasSpecificCustomEnchant(item, "zetsubo");
     }
 
     private int getZetsuboLevel(ItemStack item) {
         if (!hasZetsuboEnchant(item)) return 0;
-        return plugin.getEnchantManager().getCustomEnchantLevel(item);
+        return plugin.getEnchantManager().getSpecificCustomEnchantLevel(item, "zetsubo");
     }
 
     /**

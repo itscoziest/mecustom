@@ -14,8 +14,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.Random;
 
 /**
- * Handles entity death events for enchant effects and statistics
- * FIXED: Prevent redemption boss from giving souls + handle extra rewards
+ * FIXED: Handles entity death events for enchant effects and statistics
  */
 public class EntityDeathListener implements Listener {
 
@@ -57,35 +56,35 @@ public class EntityDeathListener implements Listener {
 
     private void handleEnchantEffects(EntityDeathEvent event, Player killer) {
         ItemStack weapon = killer.getInventory().getItemInMainHand();
-        if (plugin.getEnchantManager().hasCustomEnchant(weapon)) {
-            CustomEnchant enchant = plugin.getEnchantManager().getCustomEnchant(weapon);
-            int level = plugin.getEnchantManager().getCustomEnchantLevel(weapon);
 
-            if (enchant != null) {
-                handleEnchantEffect(event, enchant, level, killer);
-            }
-        }
-    }
+        // FIXED: Check for specific enchants instead of generic check
 
-    private void handleEnchantEffect(EntityDeathEvent event, CustomEnchant enchant, int level, Player killer) {
-        switch (enchant.getName()) {
-            case "scholar":
-                handleScholar(event, level);
-                break;
-            case "guillotine":
-                handleGuillotine(event, level, killer);
-                break;
-            // Add other combat enchants here
+        // Check for Scholar enchant
+        if (plugin.getEnchantManager().hasSpecificCustomEnchant(weapon, "scholar")) {
+            int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(weapon, "scholar");
+            plugin.getLogger().info("SCHOLAR ENCHANT DETECTED! Level: " + level + " on " + weapon.getType());
+            handleScholar(event, level);
         }
+
+        // Check for Guillotine enchant
+        if (plugin.getEnchantManager().hasSpecificCustomEnchant(weapon, "guillotine")) {
+            int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(weapon, "guillotine");
+            plugin.getLogger().info("GUILLOTINE ENCHANT DETECTED! Level: " + level + " on " + weapon.getType());
+            handleGuillotine(event, level, killer);
+        }
+
+        // Add more enchant checks here as needed
     }
 
     private void handleScholar(EntityDeathEvent event, int level) {
         // Increase EXP from mob kills
-        double multiplier = level == 1 ? 1.05 : level == 2 ? 1.08 : 1.15; // 5%, 8%, 15%
+        double multiplier = plugin.getEnchantManager().getScholarExpMultiplier(level);
         int originalExp = event.getDroppedExp();
         int bonusExp = (int) (originalExp * (multiplier - 1.0));
 
         event.setDroppedExp(originalExp + bonusExp);
+
+        plugin.getLogger().info("Scholar bonus: " + originalExp + " -> " + (originalExp + bonusExp) + " (x" + multiplier + ")");
     }
 
     private void handleGuillotine(EntityDeathEvent event, int level, Player killer) {
@@ -95,7 +94,9 @@ public class EntityDeathListener implements Listener {
         Player victim = (Player) event.getEntity();
 
         // Calculate chance based on level
-        double chance = level == 1 ? 0.10 : level == 2 ? 0.30 : 0.70; // 10%, 30%, 70%
+        double chance = plugin.getEnchantManager().getGuillotineHeadDropChance(level);
+
+        plugin.getLogger().info("Guillotine chance: " + (chance * 100) + "% for Level " + level);
 
         if (random.nextDouble() < chance) {
             // Create player head
@@ -106,7 +107,7 @@ public class EntityDeathListener implements Listener {
                 meta.setOwningPlayer(victim);
 
                 // Set custom death message from config
-                String deathMessage = plugin.getEnchantManager().getEnchant("guillotine").getDeathMessage();
+                String deathMessage = plugin.getEnchantManager().getEnchantDeathMessage("guillotine");
                 if (!deathMessage.isEmpty()) {
                     deathMessage = deathMessage.replace("{victim}", victim.getName())
                             .replace("{killer}", killer.getName());
@@ -120,6 +121,9 @@ public class EntityDeathListener implements Listener {
             event.getDrops().add(head);
 
             killer.sendMessage(ColorUtils.color("&6&lGuillotine! &7You obtained " + victim.getName() + "'s head!"));
+            plugin.getLogger().info("Guillotine succeeded! Dropped " + victim.getName() + "'s head");
+        } else {
+            plugin.getLogger().info("Guillotine failed - no head dropped");
         }
     }
 }

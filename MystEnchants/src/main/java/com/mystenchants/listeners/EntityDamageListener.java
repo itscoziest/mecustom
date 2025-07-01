@@ -14,7 +14,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.Random;
 
 /**
- * Handles entity damage events for enchant effects
+ * FIXED: Handles entity damage events for enchant effects
  */
 public class EntityDamageListener implements Listener {
 
@@ -31,16 +31,18 @@ public class EntityDamageListener implements Listener {
 
         Player player = (Player) event.getEntity();
 
-        // Handle armor enchants
+        // FIXED: Handle armor enchants - check each piece for specific enchants
         for (ItemStack armor : player.getInventory().getArmorContents()) {
-            if (armor != null && plugin.getEnchantManager().hasCustomEnchant(armor)) {
-                CustomEnchant enchant = plugin.getEnchantManager().getCustomEnchant(armor);
-                int level = plugin.getEnchantManager().getCustomEnchantLevel(armor);
+            if (armor == null) continue;
 
-                if (enchant != null && enchant.getName().equals("rejuvenate")) {
-                    handleRejuvenate(player, level, event);
-                }
+            // Check for Rejuvenate enchant
+            if (plugin.getEnchantManager().hasSpecificCustomEnchant(armor, "rejuvenate")) {
+                int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(armor, "rejuvenate");
+                plugin.getLogger().info("REJUVENATE ENCHANT DETECTED! Level: " + level + " on " + armor.getType());
+                handleRejuvenate(player, level, event);
             }
+
+            // Add other armor enchants here if needed
         }
     }
 
@@ -51,28 +53,45 @@ public class EntityDamageListener implements Listener {
         Player attacker = (Player) event.getDamager();
         ItemStack weapon = attacker.getInventory().getItemInMainHand();
 
-        if (plugin.getEnchantManager().hasCustomEnchant(weapon)) {
-            CustomEnchant enchant = plugin.getEnchantManager().getCustomEnchant(weapon);
-            int level = plugin.getEnchantManager().getCustomEnchantLevel(weapon);
+        // FIXED: Check for specific weapon enchants
 
-            if (enchant != null && enchant.getName().equals("serrate")) {
-                handleSerrate(event, level);
-            }
+        // Check for Serrate enchant
+        if (plugin.getEnchantManager().hasSpecificCustomEnchant(weapon, "serrate")) {
+            int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(weapon, "serrate");
+            plugin.getLogger().info("SERRATE ENCHANT DETECTED! Level: " + level + " on " + weapon.getType());
+            handleSerrate(event, level);
         }
+
+        // Check for Pantsed enchant on leggings
+        ItemStack leggings = attacker.getInventory().getLeggings();
+        if (leggings != null && plugin.getEnchantManager().hasSpecificCustomEnchant(leggings, "pantsed")) {
+            int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(leggings, "pantsed");
+            plugin.getLogger().info("PANTSED ENCHANT DETECTED! Level: " + level + " on " + leggings.getType());
+            handlePantsed(event, level, attacker);
+        }
+
+        // Add more weapon enchant checks here
     }
 
     private void handleRejuvenate(Player player, int level, EntityDamageEvent event) {
         // Only trigger when player is at low health
+        double triggerHealth = plugin.getEnchantManager().getRejuvenateTriggerHealth();
         double healthAfterDamage = player.getHealth() - event.getFinalDamage();
-        if (healthAfterDamage > 6.0) return; // 3 hearts
 
-        double chance = level == 1 ? 0.10 : level == 2 ? 0.12 : 0.17;
-        double healing = level == 1 ? 4.0 : level == 2 ? 6.0 : 10.0; // 2, 3, 5 hearts
+        if (healthAfterDamage > triggerHealth) return;
+
+        double chance = plugin.getEnchantManager().getRejuvenateHealChance(level);
+        double healing = plugin.getEnchantManager().getRejuvenateHealAmount(level);
+
+        plugin.getLogger().info("Rejuvenate check: " + healthAfterDamage + " HP, " + (chance * 100) + "% chance, " + healing + " healing");
 
         if (random.nextDouble() < chance) {
             double newHealth = Math.min(player.getMaxHealth(), player.getHealth() + healing);
             player.setHealth(newHealth);
             player.sendMessage(org.bukkit.ChatColor.GREEN + "Rejuvenate activated! +" + (healing/2) + " hearts");
+            plugin.getLogger().info("Rejuvenate activated! Healed " + healing + " HP");
+        } else {
+            plugin.getLogger().info("Rejuvenate failed - no healing");
         }
     }
 
@@ -80,9 +99,36 @@ public class EntityDamageListener implements Listener {
         if (!(event.getEntity() instanceof Player)) return;
 
         Player victim = (Player) event.getEntity();
-        int duration = level == 1 ? 30 : level == 2 ? 40 : 70; // 1.5s, 2s, 3.5s (in ticks)
+        int duration = plugin.getEnchantManager().getSerrateBleedDuration(level);
 
         // Apply bleed effect (poison)
         victim.addPotionEffect(new PotionEffect(PotionEffectType.POISON, duration, 0, false, true));
+
+        plugin.getLogger().info("Serrate applied poison for " + duration + " ticks to " + victim.getName());
+    }
+
+    private void handlePantsed(EntityDamageByEntityEvent event, int level, Player attacker) {
+        if (!(event.getEntity() instanceof Player)) return;
+
+        Player victim = (Player) event.getEntity();
+        double chance = plugin.getEnchantManager().getPantsedStealChance(level);
+
+        plugin.getLogger().info("Pantsed check: " + (chance * 100) + "% chance for Level " + level);
+
+        if (random.nextDouble() < chance) {
+            ItemStack victimLeggings = victim.getInventory().getLeggings();
+            if (victimLeggings != null) {
+                // Steal the pants
+                victim.getInventory().setLeggings(null);
+                attacker.getInventory().addItem(victimLeggings);
+
+                attacker.sendMessage(org.bukkit.ChatColor.GOLD + "Pantsed! You stole " + victim.getName() + "'s pants!");
+                victim.sendMessage(org.bukkit.ChatColor.RED + "Your pants were stolen by " + attacker.getName() + "!");
+
+                plugin.getLogger().info("Pantsed succeeded! " + attacker.getName() + " stole " + victim.getName() + "'s pants");
+            }
+        } else {
+            plugin.getLogger().info("Pantsed failed - no pants stolen");
+        }
     }
 }

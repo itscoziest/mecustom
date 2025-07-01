@@ -56,6 +56,35 @@ soul-shop:
     # Sound to play
     unlock-sound: "BLOCK_ENCHANTMENT_TABLE_USE"
 
+zetsubo-sacrifice:
+  # Enable/disable the sacrifice system
+  enabled: true
+
+  # WorldGuard region name for sacrifice room
+  region-name: "zetsubo_sacrifice"
+
+  # Required items for sacrifice (format: MATERIAL:AMOUNT)
+  required-items:
+    - "NETHERITE_INGOT:10"
+    - "DRAGON_HEAD:1"
+    - "TOTEM_OF_UNDYING:3"
+    - "NETHER_STAR:5"
+    - "ENCHANTED_GOLDEN_APPLE:8"
+
+  # Messages
+  messages:
+    enter-region: "&4&lYou have entered the Sacrification Room..."
+    checking-items: "&6Please wait while we check if you have all required items..."
+    sacrifice-complete: "&a&lAll sacrifice items have been collected!"
+    insufficient-items: "&c&lYou do not have the required sacrifice items!"
+    already-completed: "&cYou have already completed the Zetsubo sacrifice ritual!"
+    enchant-received: "&d&lYou have received the Zetsubo enchant!"
+    levels-unlocked: "&aBoth Zetsubo Level 1 and 2 are now available in the Soul Shop!"
+
+  # Tracking (don't edit manually)
+  completed-players: []
+
+
 # Messages Settings
 messages:
   prefix: "&8[&6MystEnchants&8] "

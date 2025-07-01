@@ -27,7 +27,11 @@ public enum RequirementType {
 
     // Special requirements
     BOSS_FIGHT,
+
+    SACRIFICE_COMPLETED,
     TBD; // To be determined
+
+
 
     /**
      * Checks if this requirement type requires currency

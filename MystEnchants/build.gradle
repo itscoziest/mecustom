@@ -38,16 +38,28 @@ repositories {
         name = 'nexus'
         url = 'https://oss.sonatype.org/content/repositories/snapshots'
     }
+    // WorldGuard/WorldEdit repository (REQUIRED for Zetsubo Sacrifice)
+    maven {
+        name = 'sk89q-repo'
+        url = 'https://maven.enginehub.org/repo/'
+    }
 }
 
 dependencies {
+    // Core dependencies (REQUIRED)
     compileOnly 'io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT'
     compileOnly 'net.milkbowl.vault:VaultAPI:1.7'
     compileOnly 'me.clip:placeholderapi:2.11.5'
 
-    // MythicMobs dependency
+    // MythicMobs dependency (REQUIRED for boss fights)
     compileOnly 'io.lumine:Mythic-Dist:5.6.1'
 
+    // WorldGuard and WorldEdit (REQUIRED for Zetsubo Sacrifice system)
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.15'
+    compileOnly 'com.sk89q.worldedit:worldedit-core:7.2.15'
+
+    // Database and utility dependencies (REQUIRED)
     implementation 'org.bstats:bstats-bukkit:3.0.0'
     implementation 'com.zaxxer:HikariCP:5.0.1'
     implementation 'org.xerial:sqlite-jdbc:3.42.0.0'
@@ -80,8 +92,14 @@ processResources {
 }
 
 shadowJar {
+    // Relocate to avoid conflicts
     relocate 'org.bstats', 'com.mystenchants.libs.bstats'
     relocate 'com.zaxxer.hikari', 'com.mystenchants.libs.hikari'
+
+    // Exclude unnecessary files to reduce jar size
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
 
     archiveBaseName = 'MystEnchants'
     archiveClassifier = ''
@@ -91,3 +109,21 @@ shadowJar {
 build {
     dependsOn shadowJar
 }
+
+// Dependency validation task
+task validateDependencies {
+    doLast {
+        println "=== MystEnchants Required Dependencies ==="
+        println "REQUIRED plugins for server:"
+        println "- WorldGuard 7.0+ (for Zetsubo Sacrifice)"
+        println "- WorldEdit 7.2+ (required by WorldGuard)"
+        println "- Vault (for economy features)"
+        println "- MythicMobs 5.6+ (for boss fights)"
+        println ""
+        println "OPTIONAL plugins:"
+        println "- PlaceholderAPI (for placeholder support)"
+        println "======================================="
+    }
+}
+
+build.finalizedBy validateDependencies

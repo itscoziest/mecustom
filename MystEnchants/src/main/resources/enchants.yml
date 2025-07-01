@@ -403,16 +403,16 @@ enchants:
       - "&7Level 2: &fStrength II"
     unlock-requirements:
       level-1:
-        type: NONE
-        amount: 0
-        message: "&aSpecial unlock requirements - contact admin!"
+        type: SACRIFICE_COMPLETED  # Special requirement type
+        amount: 1
+        message: "&cComplete the Zetsubo sacrifice ritual first!"
       level-2:
-        type: TBD
-        amount: 0
-        message: "&cTBD - To be determined by server admins!"
+        type: SACRIFICE_COMPLETED  # Special requirement type
+        amount: 1
+        message: "&cComplete the Zetsubo sacrifice ritual first!"
     requires-full-set: true
     effects:
-      strength-levels: [1, 2] # Strength level for each enchant level
+      strength-levels: [ 1, 2 ]
       set-bonus-message: "&dZetsubo Set Bonus Activated! Strength {level}!"
 
 # Enchant Tiers Configuration

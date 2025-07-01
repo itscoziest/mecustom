@@ -895,12 +895,23 @@ public class EnchantManager {
         return plugin.getConfigManager().getString("enchants.yml", "enchants." + enchantName + ".death-message", "");
     }
 
-    /**
-     * Check if player meets enchant requirements
-     */
     public CompletableFuture<Boolean> meetsRequirements(org.bukkit.entity.Player player, String enchantName, int level) {
         CustomEnchant enchant = getEnchant(enchantName);
         if (enchant == null) return CompletableFuture.completedFuture(false);
+
+        // Special case for Zetsubo enchants - must complete sacrifice first
+        if (enchantName.equals("zetsubo")) {
+            boolean hasCompletedSacrifice = plugin.getZetsuboSacrificeManager().hasCompletedSacrifice(player.getUniqueId());
+            plugin.getLogger().info("Checking Zetsubo requirements for " + player.getName() +
+                    " level " + level + " - sacrifice completed: " + hasCompletedSacrifice);
+
+            if (!hasCompletedSacrifice) {
+                return CompletableFuture.completedFuture(false); // Must complete sacrifice first
+            }
+
+            // If sacrifice completed, both level 1 and 2 are available
+            return CompletableFuture.completedFuture(level <= 2);
+        }
 
         UnlockRequirement requirement = enchant.getUnlockRequirement(level);
         if (requirement == null || requirement.getType() == RequirementType.NONE) {
@@ -931,6 +942,11 @@ public class EnchantManager {
 
             case BOSS_FIGHT:
                 return plugin.getPlayerDataManager().hasEnchantUnlocked(player.getUniqueId(), enchantName);
+
+            // ADD THIS CASE:
+            case SACRIFICE_COMPLETED:
+                boolean hasCompletedSacrifice = plugin.getZetsuboSacrificeManager().hasCompletedSacrifice(player.getUniqueId());
+                return CompletableFuture.completedFuture(hasCompletedSacrifice);
 
             default:
                 return CompletableFuture.completedFuture(true);

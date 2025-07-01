@@ -9,6 +9,10 @@ import com.mystenchants.listeners.*;
 import com.mystenchants.managers.*;
 import com.mystenchants.integrations.*;
 import com.mystenchants.utils.ColorUtils;
+import com.mystenchants.managers.ZetsuboSacrificeManager;
+import com.mystenchants.listeners.ZetsuboRegionMoveListener;
+import com.mystenchants.commands.ZetsuboCommand;
+
 import net.milkbowl.vault.economy.Economy;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
@@ -35,6 +39,8 @@ public final class MystEnchants extends JavaPlugin {
     private MythicMobsIntegration mythicMobsIntegration;
     private MythicBossFightManager mythicBossFightManager;
     private BackupEnchantListener backupEnchantListener;
+    private ZetsuboSacrificeManager zetsuboSacrificeManager;
+
 
     // ADDED: Store listener instances for cleanup access
     private PerkCombatListener perkCombatListener;
@@ -53,6 +59,8 @@ public final class MystEnchants extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        this.zetsuboSacrificeManager = new ZetsuboSacrificeManager(this);
 
         mythicMobsIntegration = new MythicMobsIntegration(this);
         if (mythicMobsIntegration.isMythicMobsEnabled()) {
@@ -80,12 +88,28 @@ public final class MystEnchants extends JavaPlugin {
         statisticManager = new StatisticManager(this);
         worthySacrificeManager = new WorthySacrificeManager(this);
         snowmanManager = new SnowmanManager(this);
+        this.zetsuboSacrificeManager = new ZetsuboSacrificeManager(this);
+
+        // Register WorldGuard integration using PlayerMoveEvent instead of SessionManager
+        if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+            getServer().getPluginManager().registerEvents(new ZetsuboRegionMoveListener(this), this);
+            getLogger().info("WorldGuard integration enabled for Zetsubo Sacrifice system");
+        } else {
+            getLogger().warning("WorldGuard not found! Zetsubo Sacrifice system will not work.");
+        }
+
+
 
         // Register commands
         registerCommands();
 
         // Register listeners
         registerListeners();
+
+        if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+            getServer().getPluginManager().registerEvents(new ZetsuboRegionMoveListener(this), this);
+            getLogger().info("WorldGuard integration enabled for Zetsubo Sacrifice");
+        }
 
         // Initialize metrics
         new Metrics(this, 19584);
@@ -108,6 +132,10 @@ public final class MystEnchants extends JavaPlugin {
             databaseManager.close();
         }
 
+        if (zetsuboSacrificeManager != null) {
+            zetsuboSacrificeManager.shutdown();
+        }
+
         getLogger().info(ColorUtils.color("&cMystEnchants has been disabled!"));
     }
 
@@ -123,7 +151,8 @@ public final class MystEnchants extends JavaPlugin {
         getCommand("oracle").setExecutor(new OracleCommand(this));
         getCommand("perks").setExecutor(new PerksCommand(this));
         getCommand("redemption").setExecutor(new RedemptionCommand(this));
-        getCommand("enchant").setExecutor(new EnchantApplyCommand(this)); // ADD THIS LINE
+        getCommand("enchant").setExecutor(new EnchantApplyCommand(this));
+        getCommand("zetsubo").setExecutor(new ZetsuboCommand(this));
     }
 
     private void registerListeners() {
@@ -166,6 +195,12 @@ public final class MystEnchants extends JavaPlugin {
         economy = rsp.getProvider();
         return economy != null;
     }
+
+
+    public ZetsuboSacrificeManager getZetsuboSacrificeManager() {
+        return zetsuboSacrificeManager;
+    }
+
 
     public static MystEnchants getInstance() {
         return instance;

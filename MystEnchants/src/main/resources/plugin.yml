@@ -2,15 +2,23 @@ name: MystEnchants
 version: ${version}
 main: com.mystenchants.MystEnchants
 author: StrikesDev
-description: Custom enchants, perks, features, and more.
+description: Custom enchants, perks, features, and more. Includes mystical Zetsubo sacrifice system.
+website: https://github.com/itscoziest/mecustom
 api-version: 1.20
-depend: [Vault]
+
+# ONLY ESSENTIAL dependencies
+depend: [Vault, WorldGuard, WorldEdit]
 softdepend: [PlaceholderAPI, MythicMobs]
+
+# Load priority
+load: POSTWORLD
+loadbefore: [PlaceholderAPI]
 
 commands:
   enchants:
     description: Opens the enchants GUI or manages enchants
     aliases: [e, mystenchants, me]
+    permission: mystenchants.enchants
     usage: |
       /enchants - Open enchants GUI
       /enchants [player] - Show player's enchants (admin)
@@ -21,47 +29,91 @@ commands:
 
   soulshop:
     description: Opens the soul shop GUI
+    permission: mystenchants.soulshop
     usage: /soulshop
 
   souls:
     description: Check or manage souls
-    usage: /souls [player] [give/take] [amount]
+    permission: mystenchants.souls
+    usage: |
+      /souls - Check your souls
+      /souls [player] - Check player's souls (admin)
+      /souls [player] give <amount> - Give souls to player (admin)
+      /souls [player] take <amount> - Take souls from player (admin)
+      /souls [player] set <amount> - Set player's souls (admin)
 
   oracle:
-    description: Opens the oracle GUI
+    description: Opens the oracle GUI for enchant upgrades
+    permission: mystenchants.oracle
     usage: /oracle
 
   perks:
-    description: Opens the perks GUI
-    usage: /perks [give] [player] [perk] [amount]
+    description: Opens the perks GUI or manages perks
+    permission: mystenchants.perks
+    usage: |
+      /perks - Open perks GUI
+      /perks give <player> <perk> [amount] - Give perk to player (admin)
 
   redemption:
-    description: Start redemption boss fight
-    usage: /redemption [end/spec/admin]
+    description: Start redemption boss fight or manage system
+    permission: mystenchants.redemption
+    usage: |
+      /redemption - Start redemption boss fight
+      /redemption spec - Spectate current fight
+      /redemption end - Force end current fight (admin)
 
   enchant:
     description: Apply enchants to held items
-    usage: /enchant <player> give <enchant> <level>
     aliases: [applyenchant, giveenchant]
+    permission: mystenchants.enchant.use
+    usage: |
+      /enchant <player> give <enchant> <level> - Give enchant dye to player
+      /enchant <player> apply <enchant> <level> - Apply enchant directly to held item
+
+  # Zetsubo Sacrifice commands
+  zetsubo:
+    description: Manage Zetsubo sacrifice system
+    aliases: [sacrifice, zetsubosacrifice]
+    permission: mystenchants.zetsubo.admin
+    usage: |
+      /zetsubo info [player] - Check sacrifice status
+      /zetsubo reset <player> - Reset player's sacrifice status (admin)
+      /zetsubo reload - Reload sacrifice configuration (admin)
 
 permissions:
+  # Main permission nodes
   mystenchants.*:
     description: All MystEnchants permissions
     default: op
     children:
       mystenchants.admin: true
       mystenchants.use: true
+      mystenchants.zetsubo.*: true
 
   mystenchants.admin:
     description: Admin permissions for MystEnchants
     default: op
+    children:
+      mystenchants.use: true
+      mystenchants.enchant.use: true
+      mystenchants.enchant.bypass: true
+      mystenchants.souls.admin: true
+      mystenchants.zetsubo.admin: true
 
   mystenchants.use:
     description: Basic usage permissions
     default: true
+    children:
+      mystenchants.enchants: true
+      mystenchants.soulshop: true
+      mystenchants.oracle: true
+      mystenchants.perks: true
+      mystenchants.redemption: true
+      mystenchants.souls: true
 
+  # Individual command permissions
   mystenchants.enchants:
-    description: Use enchants command
+    description: Use enchants command and GUI
     default: true
 
   mystenchants.soulshop:
@@ -69,16 +121,24 @@ permissions:
     default: true
 
   mystenchants.oracle:
-    description: Use oracle
+    description: Use oracle for enchant upgrades
     default: true
 
   mystenchants.perks:
-    description: Use perks
+    description: Use perks system
     default: true
 
   mystenchants.redemption:
-    description: Use redemption
+    description: Use redemption boss fight
     default: true
+
+  mystenchants.souls:
+    description: Check own souls
+    default: true
+
+  mystenchants.souls.admin:
+    description: Manage other players' souls
+    default: op
 
   mystenchants.enchant.use:
     description: Use enchant apply command
@@ -87,3 +147,21 @@ permissions:
   mystenchants.enchant.bypass:
     description: Bypass enchant unlock requirements
     default: op
+
+  # Zetsubo Sacrifice permissions
+  mystenchants.zetsubo.use:
+    description: Use Zetsubo sacrifice system
+    default: true
+
+  mystenchants.zetsubo.admin:
+    description: Admin Zetsubo sacrifice system
+    default: op
+
+  mystenchants.zetsubo.bypass:
+    description: Bypass Zetsubo sacrifice requirements
+    default: op
+
+  # Regional permissions for Zetsubo
+  mystenchants.region.zetsubo:
+    description: Access to Zetsubo sacrifice region
+    default: true

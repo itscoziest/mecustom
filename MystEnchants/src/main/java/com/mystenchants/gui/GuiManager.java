@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.ItemFlag;
 
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -854,7 +855,7 @@ public class GuiManager {
     }
 
     /**
-     * SIMPLE FIX: Creates soul shop book - Just removed "dye" references, no material changes
+     * FIXED: Creates soul shop book with comprehensive status checking
      */
     private ItemStack createSoulShopBook(CustomEnchant enchant, int level, Player player, Map<String, Integer> playerEnchants) {
         String costPath = "shop.items." + enchant.getName() + "-book-level-" + level + ".cost";
@@ -863,44 +864,35 @@ public class GuiManager {
                 plugin.getConfigManager().getPerksConfig().getInt(fallbackPath, 500));
 
         Integer currentLevel = playerEnchants.get(enchant.getName());
+
+        // FIXED: Comprehensive status checking
         boolean isPurchasable = canPurchaseEnchantLevel(player, enchant, level, playerEnchants);
-        boolean meetsRequirements = false;
+        boolean meetsRequirements = effectivelyMeetsRequirements(player, enchant, level, playerEnchants);
         String statusMessage = "";
 
-        // Determine status and requirements
-        if (currentLevel != null && currentLevel >= level) {
-            statusMessage = ColorUtils.color("&a&l✓ OWNED");
-            isPurchasable = false;
-        } else if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
+        // FIXED: Determine status message based on comprehensive checks
+        if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
             statusMessage = ColorUtils.color("&c&l✗ REQUIRES LEVEL " + (level - 1));
             isPurchasable = false;
+        } else if (!meetsRequirements) {
+            statusMessage = ColorUtils.color("&c&l✗ REQUIREMENTS NOT MET");
+            isPurchasable = false;
         } else {
-            try {
-                meetsRequirements = plugin.getEnchantManager()
-                        .meetsRequirements(player, enchant.getName(), level).join();
-
-                if (meetsRequirements) {
-                    statusMessage = ColorUtils.color("&a&l✓ AVAILABLE");
-                    isPurchasable = true;
-                } else {
-                    statusMessage = ColorUtils.color("&c&l✗ REQUIREMENTS NOT MET");
-                    isPurchasable = false;
-                }
-            } catch (Exception e) {
-                statusMessage = ColorUtils.color("&c&l✗ ERROR CHECKING REQUIREMENTS");
-                isPurchasable = false;
-            }
+            statusMessage = ColorUtils.color("&a&l✓ AVAILABLE");
+            isPurchasable = true;
         }
 
         List<String> lore = new ArrayList<>();
         lore.add(statusMessage);
         lore.add("");
 
-        // REMOVED: "enchant dye" references - just describe the enchant
+        // FIXED: Lore description
         if (currentLevel != null && currentLevel >= level) {
-            lore.add(ColorUtils.color("&7You already own this enchant level"));
+            lore.add(ColorUtils.color("&7Purchase additional " + enchant.getDisplayName() + " Level " + level));
+            lore.add(ColorUtils.color("&7enchant books for backup use"));
         } else {
-            lore.add(ColorUtils.color("&7" + enchant.getDisplayName() + " Level " + level));
+            lore.add(ColorUtils.color("&7Apply " + enchant.getDisplayName() + " Level " + level));
+            lore.add(ColorUtils.color("&7to your equipment"));
         }
         lore.add("");
 
@@ -917,14 +909,20 @@ public class GuiManager {
         }
         lore.add("");
 
-        // Show requirements if not met
-        if (!meetsRequirements && !(currentLevel != null && currentLevel >= level)) {
+        // FIXED: Show requirements only when truly not met
+        if (!meetsRequirements) {
             if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
                 lore.add(ColorUtils.color("&c&lRequirements:"));
                 lore.add(ColorUtils.color("&7Must own Level " + (level - 1) + " first"));
-            } else {
+            } else if (currentLevel == null || currentLevel < level) {
+                // Only show original requirements if they don't own the enchant
                 lore.add(ColorUtils.color("&c&lRequirements:"));
-                lore.add(ColorUtils.color("&7Check Oracle for details"));
+                UnlockRequirement req = enchant.getUnlockRequirement(level);
+                if (req != null && req.getType() != com.mystenchants.enchants.RequirementType.NONE) {
+                    lore.add(ColorUtils.color("&7" + req.getMessage()));
+                } else {
+                    lore.add(ColorUtils.color("&7Check Oracle for details"));
+                }
             }
             lore.add("");
         }
@@ -934,9 +932,8 @@ public class GuiManager {
         lore.add("");
 
         if (isPurchasable) {
-            // UPDATED: Clean purchase instructions without "dye"
+            lore.add(ColorUtils.color("&6&lDrag and drop onto item to apply!"));
             lore.add(ColorUtils.color("&eClick to purchase!"));
-            lore.add(ColorUtils.color("&7Drag onto item to apply"));
         } else {
             lore.add(ColorUtils.color("&c&lCannot purchase yet"));
             if (currentLevel == null || currentLevel < level) {
@@ -944,48 +941,51 @@ public class GuiManager {
             }
         }
 
-        // UNCHANGED: Keep original material logic (no green dye changes)
+        // Create item name
         String itemName = enchant.getTier().getColor() + "&l" + enchant.getDisplayName();
         if (level > 1) {
             itemName += " Level " + level;
         }
+        itemName += " Enchant";
 
-        // UNCHANGED: Use tier material, don't change to green when purchased
+        // FIXED: Material selection - use tier material when purchasable
         Material bookMaterial;
-        if (isPurchasable || (currentLevel != null && currentLevel >= level)) {
-            bookMaterial = enchant.getTier().getGuiItem(); // AVAILABLE OR OWNED = TIER COLOR
+        if (isPurchasable) {
+            bookMaterial = enchant.getTier().getGuiItem(); // Use tier material
         } else {
-            bookMaterial = Material.GRAY_DYE; // LOCKED = GRAY
+            bookMaterial = Material.GRAY_DYE; // Gray when locked
         }
 
         ItemStack book = createItemStack(bookMaterial, ColorUtils.color(itemName), lore);
 
-// CRITICAL: Add persistent data for soul shop purchases
-        ItemMeta meta = book.getItemMeta();
-        if (meta != null) {
-            PersistentDataContainer container = meta.getPersistentDataContainer();
-
-            NamespacedKey soulShopKey = new NamespacedKey(plugin, "soul_shop_item");
-            container.set(soulShopKey, PersistentDataType.STRING, enchant.getName());
-
-            NamespacedKey levelKey = new NamespacedKey(plugin, "soul_shop_level");
-            container.set(levelKey, PersistentDataType.INTEGER, level);
-
-            NamespacedKey costKey = new NamespacedKey(plugin, "soul_shop_cost");
-            container.set(costKey, PersistentDataType.INTEGER, cost);
-
-            NamespacedKey purchasableKey = new NamespacedKey(plugin, "soul_shop_purchasable");
-            container.set(purchasableKey, PersistentDataType.BYTE, (byte) (isPurchasable ? 1 : 0));
-
-            if (isPurchasable) {
+        // FIXED: Add glow effect for ALL purchasable items
+        if (isPurchasable) {
+            ItemMeta meta = book.getItemMeta();
+            if (meta != null) {
                 meta.addEnchant(org.bukkit.enchantments.Enchantment.LUCK, 1, true);
+                meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+                book.setItemMeta(meta);
             }
-
-            book.setItemMeta(meta);
         }
 
         return book;
     }
+
+
+    /**
+     * Refreshes all open Soul Shop GUIs when enchants are unlocked
+     */
+    public void refreshAllSoulShopGuis() {
+        for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
+            String title = ChatColor.stripColor(onlinePlayer.getOpenInventory().getTitle());
+            if (title.equals("Soul Shop")) {
+                onlinePlayer.openInventory(createSoulShopGui(onlinePlayer));
+            } else if (title.equals("Soul Shop (Page 2)")) {
+                onlinePlayer.openInventory(createSoulShopPage2Gui(onlinePlayer));
+            }
+        }
+    }
+
 
     /**
      * Gets effect description for specific enchant level
@@ -1178,28 +1178,51 @@ public class GuiManager {
     }
 
     /**
-     * Helper method to check if player can purchase an enchant level
+     * FIXED: Comprehensive purchasability check
      */
     private boolean canPurchaseEnchantLevel(Player player, CustomEnchant enchant, int level, Map<String, Integer> playerEnchants) {
         Integer currentLevel = playerEnchants.get(enchant.getName());
 
-        // Can't purchase if already owned
-        if (currentLevel != null && currentLevel >= level) {
-            return false;
-        }
-
-        // For level 1, just check if they don't have it
+        // For level 1, always allow purchase
         if (level == 1) {
-            return currentLevel == null || currentLevel < 1;
+            return true;
         }
 
-        // For higher levels, must have previous level
+        // For higher levels, check if they have the previous level
         if (currentLevel == null || currentLevel < level - 1) {
+            return false; // Need previous level first
+        }
+
+        // FIXED: If they own this level or higher, they can purchase it
+        if (currentLevel != null && currentLevel >= level) {
+            return true;
+        }
+
+        // FIXED: If they own the previous level, check if they meet requirements for this level
+        try {
+            return plugin.getEnchantManager().meetsRequirements(player, enchant.getName(), level).join();
+        } catch (Exception e) {
             return false;
         }
+    }
 
-        // Must be the next level (can't skip)
-        return level == currentLevel + 1;
+    /**
+     * FIXED: Check if player meets requirements OR already owns the enchant
+     */
+    private boolean effectivelyMeetsRequirements(Player player, CustomEnchant enchant, int level, Map<String, Integer> playerEnchants) {
+        Integer currentLevel = playerEnchants.get(enchant.getName());
+
+        // If player already owns this level or higher, they "meet" requirements
+        if (currentLevel != null && currentLevel >= level) {
+            return true;
+        }
+
+        // Otherwise, check actual requirements
+        try {
+            return plugin.getEnchantManager().meetsRequirements(player, enchant.getName(), level).join();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 }

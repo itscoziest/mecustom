@@ -1,3 +1,4 @@
+# Updated guis.yml with 4-row Perks GUI
 guis:
   # Main Enchants GUI
   enchants:
@@ -306,95 +307,12 @@ guis:
       highlight-available: true
       dim-unavailable: true
 
-  # Perks GUI
+  # UPDATED: Perks GUI - 4 rows (36 slots) with perks starting at slot 20
   perks:
     title: "&6&lPerks"
-    size: 54
+    size: 36  # CHANGED: 4 rows instead of 6 (was 54)
     items:
-      teleport-snowball:
-        slot: 10
-        material: SNOWBALL
-        name: "&b&lTeleport Snowball"
-        lore:
-          - "&7Teleport to the player you hit"
-          - "&7with this snowball"
-          - ""
-          - "&7Cooldown: &f{cooldown}s"
-          - "&7Cost: &6{cost} souls"
-          - ""
-          - "&eClick to purchase!"
-      grappling-hook:
-        slot: 11
-        material: FISHING_ROD
-        name: "&a&lGrappling Hook"
-        lore:
-          - "&7Hook onto players and pull"
-          - "&7them towards you for {hook-time}s"
-          - ""
-          - "&7Cooldown: &f{cooldown}s"
-          - "&7Cost: &6{cost} souls"
-          - ""
-          - "&eClick to purchase!"
-      snowman-egg:
-        slot: 12
-        material: PUMPKIN
-        name: "&f&lSnowman Egg"
-        lore:
-          - "&7Spawns a snowman that attacks"
-          - "&7enemies for {duration}s"
-          - ""
-          - "&7Cooldown: &f{cooldown}s"
-          - "&7Cost: &6{cost} souls"
-          - ""
-          - "&eClick to purchase!"
-      spellbreaker:
-        slot: 13
-        material: BLAZE_ROD
-        name: "&6&lSpellbreaker"
-        lore:
-          - "&7Hit a player {hits} times to remove"
-          - "&7their potion effects for {duration}s"
-          - ""
-          - "&7Cooldown: &f{cooldown}s"
-          - "&7Cost: &6{cost} souls"
-          - ""
-          - "&eClick to purchase!"
-      tradeoff-egg:
-        slot: 14
-        material: EGG
-        name: "&e&lTradeoff Egg"
-        lore:
-          - "&7Switch potion effects with"
-          - "&7target for {lock-duration}s"
-          - ""
-          - "&7Cooldown: &f{cooldown}s"
-          - "&7Cost: &6{cost} souls"
-          - ""
-          - "&eClick to purchase!"
-      worthy-sacrifice:
-        slot: 15
-        material: WITCH_SPAWN_EGG
-        name: "&5&lWorthy Sacrifice"
-        lore:
-          - "&7Spawns a witch with {health} HP"
-          - "&7that absorbs your damage"
-          - ""
-          - "&7Cooldown: &f{cooldown}s"
-          - "&7Cost: &6{cost} souls"
-          - ""
-          - "&eClick to purchase!"
-      lovestruck:
-        slot: 16
-        material: ROSE_BUSH
-        name: "&d&lLovestruck"
-        lore:
-          - "&7Hit a player {hits} times to give"
-          - "&7nausea and rose inventory for {duration}s"
-          - ""
-          - "&7Cooldown: &f{cooldown}s"
-          - "&7Cost: &6{cost} souls"
-          - ""
-          - "&eClick to purchase!"
+      # Info item remains at top center
       info-item:
         slot: 4
         material: NETHER_STAR
@@ -408,6 +326,98 @@ guis:
           - ""
           - "&7Some perks require multiple hits"
           - "&7or specific conditions to activate."
+
+      # UPDATED: All perks now start from slot 20 (3rd row)
+      teleport-snowball:
+        slot: 20  # CHANGED: was 10, now 20
+        material: SNOWBALL
+        name: "&b&lTeleport Snowball"
+        lore:
+          - "&7Teleport to the player you hit"
+          - "&7with this snowball"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+
+      grappling-hook:
+        slot: 21  # CHANGED: was 11, now 21
+        material: FISHING_ROD
+        name: "&a&lGrappling Hook"
+        lore:
+          - "&7Hook onto players and pull"
+          - "&7them towards you for {hook-time}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+
+      snowman-egg:
+        slot: 22  # CHANGED: was 12, now 22
+        material: PUMPKIN
+        name: "&f&lSnowman Egg"
+        lore:
+          - "&7Spawns a snowman that attacks"
+          - "&7enemies for {duration}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+
+      spellbreaker:
+        slot: 23  # CHANGED: was 13, now 23
+        material: BLAZE_ROD
+        name: "&6&lSpellbreaker"
+        lore:
+          - "&7Hit a player {hits} times to remove"
+          - "&7their potion effects for {duration}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+
+      tradeoff-egg:
+        slot: 24  # CHANGED: was 14, now 24
+        material: EGG
+        name: "&e&lTradeoff Egg"
+        lore:
+          - "&7Switch potion effects with"
+          - "&7target for {lock-duration}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+
+      worthy-sacrifice:
+        slot: 29  # CHANGED: was 15, now 29 (4th row, 2nd slot)
+        material: WITCH_SPAWN_EGG
+        name: "&5&lWorthy Sacrifice"
+        lore:
+          - "&7Spawns a witch with {health} HP"
+          - "&7that absorbs your damage"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
+
+      lovestruck:
+        slot: 30  # CHANGED: was 16, now 30 (4th row, 3rd slot)
+        material: ROSE_BUSH
+        name: "&d&lLovestruck"
+        lore:
+          - "&7Hit a player {hits} times to give"
+          - "&7nausea and rose inventory for {duration}s"
+          - ""
+          - "&7Cooldown: &f{cooldown}s"
+          - "&7Cost: &6{cost} souls"
+          - ""
+          - "&eClick to purchase!"
 
   # Redemption Confirmation GUI
   redemption-confirm:

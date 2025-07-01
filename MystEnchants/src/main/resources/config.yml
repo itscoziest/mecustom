@@ -21,6 +21,25 @@ settings:
   auto-save-interval: 300 # seconds
 
 
+# Multiple Enchants System
+enchants:
+  # Maximum number of custom enchants per item (0 = unlimited)
+  max-enchants-per-item: 10
+
+  # Allow different enchant types to coexist on same item
+  allow-multiple-enchants: true
+
+  # When applying same enchant type, only allow upgrades (higher levels)
+  only-allow-upgrades: true
+
+  # Remove conflicting enchants automatically
+  remove-conflicting: false
+
+  # Conflicting enchant pairs (these cannot coexist)
+  conflicts:
+    - ["tempo", "scholar"]  # Example: tempo and scholar conflict
+    # Add more conflicts as needed
+
 # Soul Shop Auto-Unlock Settings
 soul-shop:
   # Automatically unlock level 1 enchants when purchased from soul shop
@@ -44,6 +63,28 @@ messages:
   player-not-found: "&cPlayer not found!"
   invalid-arguments: "&cInvalid arguments! Use: {usage}"
   config-reloaded: "&aConfiguration reloaded successfully!"
+
+
+
+  # Enhanced Messages for Multiple Enchants
+  enchant-not-found: "&cEnchant not found!"
+
+  # NEW: Multiple enchants messages
+  enchant-apply-success-multiple: "&a&l✓ APPLIED! &7{enchant} Level {level} → {item} &7(Total: {total} enchants)"
+  enchant-max-reached: "&cThis item already has the maximum number of enchants ({max})!"
+  enchant-conflict: "&c{enchant1} conflicts with {enchant2}! Remove {enchant2} first."
+  enchant-list-header: "&7Enchants on this item:"
+  enchant-list-format: "&7• &d{enchant} &7Level {level}"
+
+  # Enhanced apply messages
+  enchant-apply-upgrade: "&a&l✓ UPGRADED! &7{enchant} Level {old_level} → Level {new_level}"
+  enchant-apply-same-level: "&cThis item already has {enchant} Level {level}!"
+  enchant-apply-downgrade: "&cCannot downgrade {enchant} from Level {current} to Level {new}!"
+
+  # Summary messages
+  enchant-summary-single: "&7Enchanted with: &d{enchant} {level}"
+  enchant-summary-multiple: "&7Enchanted with {count} enchants: &f{list}"
+
 
   # Enchant Apply Command Messages
   enchant-not-unlocked: "&c{player} has not unlocked {enchant} Level {level}!"

@@ -230,95 +230,530 @@ public class EnchantManager {
     }
 
     /**
-     * Checks if an item has a custom enchant
+     * UPDATE: Modified hasCustomEnchant to check for any enchants
      */
     public boolean hasCustomEnchant(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-
-        ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-
-        return container.has(enchantKey, PersistentDataType.STRING);
+        return !getAllCustomEnchants(item).isEmpty();
     }
 
     /**
-     * Gets the custom enchant on an item
+     * UPDATE: Modified getCustomEnchant to return primary enchant (for backwards compatibility)
      */
     public CustomEnchant getCustomEnchant(ItemStack item) {
-        if (!hasCustomEnchant(item)) return null;
+        Map<String, Integer> enchants = getAllCustomEnchants(item);
+        if (enchants.isEmpty()) return null;
 
-        ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer container = meta.getPersistentDataContainer();
+        // Try to get from old format first
+        if (item.hasItemMeta()) {
+            PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
+            if (container.has(enchantKey, PersistentDataType.STRING)) {
+                String enchantName = container.get(enchantKey, PersistentDataType.STRING);
+                CustomEnchant enchant = getEnchant(enchantName);
+                if (enchant != null && enchants.containsKey(enchantName)) {
+                    return enchant;
+                }
+            }
+        }
 
-        String enchantName = container.get(enchantKey, PersistentDataType.STRING);
-        return getEnchant(enchantName);
+        // Fallback to first enchant
+        String firstName = enchants.keySet().iterator().next();
+        return getEnchant(firstName);
     }
 
     /**
-     * Gets the level of a custom enchant on an item
+     * UPDATE: Modified getCustomEnchantLevel for backwards compatibility
      */
     public int getCustomEnchantLevel(ItemStack item) {
-        if (!hasCustomEnchant(item)) return 0;
+        CustomEnchant primary = getCustomEnchant(item);
+        if (primary == null) return 0;
 
-        ItemMeta meta = item.getItemMeta();
+        return getSpecificCustomEnchantLevel(item, primary.getName());
+    }
+
+
+
+
+    /**
+     * ENHANCED: Updates item display for multiple enchants support
+     * This version adds the new enchant while preserving existing different enchants
+     */
+    private void updateItemDisplayMultiple(ItemMeta meta, CustomEnchant enchant, int level) {
+        // Get current lore
+        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+
+        // Remove any existing lore for THIS specific enchant only
+        String enchantDisplayName = stripColorCodes(enchant.getDisplayName()).toLowerCase();
+        lore.removeIf(line -> {
+            if (line == null) return false;
+            String strippedLine = stripColorCodes(line).toLowerCase();
+            boolean shouldRemove = strippedLine.contains(enchantDisplayName);
+            if (shouldRemove) {
+                plugin.getLogger().info("Removing existing lore for same enchant: " + line);
+            }
+            return shouldRemove;
+        });
+
+        // Add new enchant lore
+        String enchantLine = ColorUtils.color("&d&l" + enchant.getDisplayName() + " " +
+                getRomanNumeral(level));
+
+        // Find the right position to insert (after other enchant lines)
+        int insertPosition = 0;
+        for (int i = 0; i < lore.size(); i++) {
+            String line = lore.get(i);
+            if (line != null && (line.contains("§d") || line.contains("&d"))) {
+                insertPosition = i + 1; // Insert after the last enchant line
+            } else {
+                break; // Stop when we hit non-enchant lines
+            }
+        }
+
+        lore.add(insertPosition, enchantLine);
+        meta.setLore(lore);
+
+        plugin.getLogger().info("Added enchant lore for " + enchant.getDisplayName() + " Level " + level + " at position " + insertPosition);
+    }
+
+
+    /**
+     * NEW: Remove only a specific enchant by name, keeping others
+     */
+    public ItemStack removeSpecificEnchant(ItemStack item, String enchantName) {
+        if (!hasCustomEnchant(item)) return item;
+
+        ItemStack result = item.clone();
+        ItemMeta meta = result.getItemMeta();
+        if (meta == null) return item;
+
+        // Get the current enchant to see if it matches
+        CustomEnchant currentEnchant = getCustomEnchant(item);
+        if (currentEnchant == null || !currentEnchant.getName().equals(enchantName)) {
+            return item; // Not the enchant we want to remove
+        }
+
+        // Remove persistent data for this specific enchant
         PersistentDataContainer container = meta.getPersistentDataContainer();
+        container.remove(enchantKey);
+        container.remove(levelKey);
 
-        return container.getOrDefault(levelKey, PersistentDataType.INTEGER, 0);
+        // Remove only this enchant's lore line
+        if (meta.hasLore()) {
+            List<String> lore = new ArrayList<>(meta.getLore());
+            String enchantDisplayName = stripColorCodes(currentEnchant.getDisplayName()).toLowerCase();
+
+            lore.removeIf(line -> {
+                if (line == null) return false;
+                String strippedLine = stripColorCodes(line).toLowerCase();
+                boolean shouldRemove = strippedLine.contains(enchantDisplayName);
+                if (shouldRemove) {
+                    plugin.getLogger().info("Removing specific enchant lore (" + enchantName + "): " + line);
+                }
+                return shouldRemove;
+            });
+
+            meta.setLore(lore);
+        }
+
+        result.setItemMeta(meta);
+
+        plugin.getLogger().info("Removed specific enchant: " + enchantName);
+
+        return result;
+    }
+
+
+    /**
+     * 4. ADD THIS FOURTH: Get all enchants on an item
+     */
+    public Map<String, Integer> getAllCustomEnchants(ItemStack item) {
+        Map<String, Integer> enchants = new HashMap<>();
+
+        if (item == null || !item.hasItemMeta()) {
+            return enchants;
+        }
+
+        try {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer container = meta.getPersistentDataContainer();
+
+            // Check each possible enchant by trying to find keys
+            for (CustomEnchant enchant : getAllEnchants()) {
+                try {
+                    NamespacedKey specificKey = new NamespacedKey(plugin, "enchant_" + enchant.getName());
+                    if (container.has(specificKey, PersistentDataType.INTEGER)) {
+                        int level = container.get(specificKey, PersistentDataType.INTEGER);
+                        enchants.put(enchant.getName(), level);
+                        plugin.getLogger().info("Found enchant: " + enchant.getName() + " Level " + level);
+                    }
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Error checking enchant " + enchant.getName() + ": " + e.getMessage());
+                }
+            }
+
+            plugin.getLogger().info("Total enchants found: " + enchants.size());
+
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error getting all enchants: " + e.getMessage());
+        }
+
+        return enchants;
     }
 
     /**
-     * Applies a custom enchant to an item
+     * 1. ADD THIS FIRST: Check if item has a specific enchant by name
+     */
+    public boolean hasSpecificCustomEnchant(ItemStack item, String enchantName) {
+        if (item == null || !item.hasItemMeta()) return false;
+
+        try {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer container = meta.getPersistentDataContainer();
+            NamespacedKey specificKey = new NamespacedKey(plugin, "enchant_" + enchantName);
+
+            boolean hasSpecific = container.has(specificKey, PersistentDataType.INTEGER);
+            plugin.getLogger().info("Checking for specific enchant " + enchantName + ": " + hasSpecific);
+            return hasSpecific;
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error checking specific enchant " + enchantName + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * NEW: Extract roman numeral from a string
+     */
+    private int extractRomanNumeral(String text) {
+        String[] romanNumerals = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"};
+
+        for (int i = romanNumerals.length - 1; i > 0; i--) {
+            if (text.contains(romanNumerals[i])) {
+                return i;
+            }
+        }
+        return 1; // Default to 1 if no roman numeral found
+    }
+
+    /**
+     * 6. MODIFY YOUR EXISTING applyEnchant METHOD: Replace with this improved version
      */
     public ItemStack applyEnchant(ItemStack item, CustomEnchant enchant, int level) {
         if (item == null || enchant == null || level <= 0 || level > enchant.getMaxLevel()) {
+            plugin.getLogger().warning("Invalid parameters for applyEnchant");
             return item;
         }
 
         // Check if item is applicable
         if (!enchant.isApplicableTo(item.getType())) {
+            plugin.getLogger().warning("Enchant " + enchant.getName() + " not applicable to " + item.getType());
             return item;
         }
+
+        try {
+            ItemStack result = item.clone();
+            ItemMeta meta = result.getItemMeta();
+            if (meta == null) {
+                plugin.getLogger().warning("Item meta is null");
+                return item;
+            }
+
+            PersistentDataContainer container = meta.getPersistentDataContainer();
+
+            // Store this specific enchant with its level (NEW SYSTEM)
+            NamespacedKey specificEnchantKey = new NamespacedKey(plugin, "enchant_" + enchant.getName());
+            container.set(specificEnchantKey, PersistentDataType.INTEGER, level);
+
+            // Also store in the old format for backwards compatibility
+            container.set(enchantKey, PersistentDataType.STRING, enchant.getName());
+            container.set(levelKey, PersistentDataType.INTEGER, level);
+
+            // Update the lore
+            updateItemLoreWithAllEnchants(meta, result);
+
+            // Add enchantment glow
+            meta.addEnchant(Enchantment.LUCK, 1, true);
+
+            result.setItemMeta(meta);
+
+            plugin.getLogger().info("Successfully applied " + enchant.getDisplayName() + " Level " + level);
+
+            return result;
+
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error applying enchant " + enchant.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            return item;
+        }
+    }
+
+
+    /**
+     * 7. ADD THIS LAST: Update lore to show all enchants
+     */
+    private void updateItemLoreWithAllEnchants(ItemMeta meta, ItemStack item) {
+        try {
+            List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+
+            // Remove ALL existing enchant lines first
+            lore.removeIf(line -> {
+                if (line == null) return false;
+                String strippedLine = stripColorCodes(line).toLowerCase();
+
+                // Check if this line contains any known enchant name
+                for (CustomEnchant enchant : getAllEnchants()) {
+                    String enchantName = stripColorCodes(enchant.getDisplayName()).toLowerCase();
+                    if (strippedLine.contains(enchantName)) {
+                        plugin.getLogger().info("Removing enchant lore: " + line);
+                        return true;
+                    }
+                }
+
+                // Also remove lines that match roman numeral patterns
+                boolean isEnchantLine = strippedLine.matches(".*\\b(i{1,3}|iv|v|vi{1,3}|ix|x)\\b.*") &&
+                        (line.contains("§") || line.contains("&"));
+                if (isEnchantLine) {
+                    plugin.getLogger().info("Removing potential enchant lore: " + line);
+                }
+                return isEnchantLine;
+            });
+
+            // Get all enchants on this item and add them to lore
+            Map<String, Integer> allEnchants = getAllCustomEnchants(item);
+
+            // Add each enchant to the lore at the beginning
+            int insertPosition = 0;
+            for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
+                CustomEnchant enchant = getEnchant(entry.getKey());
+                if (enchant != null) {
+                    String enchantLine = ColorUtils.color("&d&l" + enchant.getDisplayName() + " " +
+                            getRomanNumeral(entry.getValue()));
+                    lore.add(insertPosition, enchantLine);
+                    insertPosition++;
+                    plugin.getLogger().info("Added enchant lore: " + enchantLine);
+                }
+            }
+
+            meta.setLore(lore);
+            plugin.getLogger().info("Updated lore with " + allEnchants.size() + " enchants");
+
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error updating lore: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+
+    /**
+     * NEW: Get all custom enchants from persistent data container
+     */
+    private Map<String, Integer> getAllCustomEnchantsFromContainer(ItemStack item) {
+        Map<String, Integer> enchants = new HashMap<>();
+
+        if (item == null || !item.hasItemMeta()) {
+            return enchants;
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        // Check each possible enchant
+        for (CustomEnchant enchant : getAllEnchants()) {
+            NamespacedKey specificKey = new NamespacedKey(plugin, "enchant_" + enchant.getName());
+            if (container.has(specificKey, PersistentDataType.INTEGER)) {
+                int level = container.get(specificKey, PersistentDataType.INTEGER);
+                enchants.put(enchant.getName(), level);
+                plugin.getLogger().info("Found enchant in container: " + enchant.getName() + " Level " + level);
+            }
+        }
+
+        return enchants;
+    }
+
+
+
+
+    /**
+     * 2. ADD THIS SECOND: Get level of specific enchant
+     */
+    public int getSpecificCustomEnchantLevel(ItemStack item, String enchantName) {
+        if (item == null || !item.hasItemMeta()) return 0;
+
+        try {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer container = meta.getPersistentDataContainer();
+            NamespacedKey specificKey = new NamespacedKey(plugin, "enchant_" + enchantName);
+
+            int level = container.getOrDefault(specificKey, PersistentDataType.INTEGER, 0);
+            plugin.getLogger().info("Level of " + enchantName + ": " + level);
+            return level;
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error getting level for " + enchantName + ": " + e.getMessage());
+            return 0;
+        }
+    }
+
+
+
+
+
+
+    /**
+     * NEW: Remove a specific enchant by name while keeping others
+     */
+    public ItemStack removeSpecificEnchantByName(ItemStack item, String enchantName) {
+        if (item == null || !item.hasItemMeta()) return item;
 
         ItemStack result = item.clone();
         ItemMeta meta = result.getItemMeta();
 
-        if (meta == null) return item;
-
-        // Set persistent data
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        container.set(enchantKey, PersistentDataType.STRING, enchant.getName());
-        container.set(levelKey, PersistentDataType.INTEGER, level);
+        NamespacedKey specificKey = new NamespacedKey(plugin, "enchant_" + enchantName);
 
-        // Update display name and lore
-        updateItemDisplay(meta, enchant, level);
+        // Remove this specific enchant's data
+        if (container.has(specificKey, PersistentDataType.INTEGER)) {
+            container.remove(specificKey);
+            plugin.getLogger().info("Removed enchant data for: " + enchantName);
 
-        // Add enchantment glow
-        meta.addEnchant(Enchantment.LUCK, 1, true);
+            // Update the lore to reflect all remaining enchants
+            updateItemLoreWithAllEnchants(meta, result);
 
-        result.setItemMeta(meta);
+            // Check if this was the last enchant
+            Map<String, Integer> remainingEnchants = getAllCustomEnchantsFromContainer(result);
+            if (remainingEnchants.isEmpty()) {
+                // Remove old format keys and glow
+                container.remove(enchantKey);
+                container.remove(levelKey);
+                if (meta.hasEnchant(Enchantment.LUCK)) {
+                    meta.removeEnchant(Enchantment.LUCK);
+                }
+                plugin.getLogger().info("Removed last enchant - cleared all enchant data");
+            } else {
+                // Update old format to point to one of the remaining enchants
+                String firstRemaining = remainingEnchants.keySet().iterator().next();
+                int firstLevel = remainingEnchants.get(firstRemaining);
+                container.set(enchantKey, PersistentDataType.STRING, firstRemaining);
+                container.set(levelKey, PersistentDataType.INTEGER, firstLevel);
+            }
+
+            result.setItemMeta(meta);
+        }
+
         return result;
     }
 
+
+
+
     /**
-     * Updates item display with enchant information
+     * FIXED: Updates item display with enchant information
+     * Now properly removes ALL existing custom enchant lore before adding new ones
      */
     private void updateItemDisplay(ItemMeta meta, CustomEnchant enchant, int level) {
-        // Update lore to show enchant
-        List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+        // Get current lore
+        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
 
-        // Remove existing custom enchant lore
-        lore.removeIf(line -> line.contains("§d") && line.contains("§l"));
+        // ENHANCED: Remove ALL existing custom enchant lore lines
+        // This removes lines that contain enchant names in various formats
+        lore.removeIf(line -> {
+            if (line == null) return false;
 
-        // Add new enchant lore
+            // Strip all color codes for comparison
+            String strippedLine = stripColorCodes(line).toLowerCase();
+
+            // Check if this line contains any known enchant name
+            for (CustomEnchant existingEnchant : getAllEnchants()) {
+                String enchantName = stripColorCodes(existingEnchant.getDisplayName()).toLowerCase();
+
+                // Check if line contains this enchant name
+                if (strippedLine.contains(enchantName)) {
+                    plugin.getLogger().info("Removing existing enchant lore: " + line);
+                    return true;
+                }
+            }
+
+            // Also remove lines that look like enchant lines (contain roman numerals and typical enchant formatting)
+            if (strippedLine.matches(".*\\b(i{1,3}|iv|v|vi{1,3}|ix|x)\\b.*") &&
+                    (line.contains("§") || line.contains("&"))) {
+                plugin.getLogger().info("Removing potential enchant lore (roman numeral pattern): " + line);
+                return true;
+            }
+
+            return false;
+        });
+
+        // Add new enchant lore at the beginning
         String enchantLine = ColorUtils.color("&d&l" + enchant.getDisplayName() + " " +
                 getRomanNumeral(level));
         lore.add(0, enchantLine);
 
         meta.setLore(lore);
+
+        plugin.getLogger().info("Updated item display for " + enchant.getDisplayName() + " Level " + level);
     }
 
     /**
-     * Removes a custom enchant from an item
+     * 8. ADD THIS HELPER: Strip color codes
+     */
+    private String stripColorCodes(String text) {
+        if (text == null) return "";
+        return text.replaceAll("[§&][0-9a-fk-or]", "");
+    }
+
+
+    /**
+     * 5. ADD THIS FIFTH: Get summary of enchants as string
+     */
+    public String getEnchantSummary(ItemStack item) {
+        try {
+            Map<String, Integer> enchants = getAllCustomEnchants(item);
+            if (enchants.isEmpty()) return "No enchants";
+
+            StringBuilder summary = new StringBuilder();
+            for (Map.Entry<String, Integer> entry : enchants.entrySet()) {
+                if (summary.length() > 0) summary.append(", ");
+
+                CustomEnchant enchant = getEnchant(entry.getKey());
+                if (enchant != null) {
+                    summary.append(enchant.getDisplayName()).append(" ").append(getRomanNumeral(entry.getValue()));
+                } else {
+                    summary.append(entry.getKey()).append(" ").append(entry.getValue());
+                }
+            }
+
+            return summary.toString();
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error getting enchant summary: " + e.getMessage());
+            return "Error getting summary";
+        }
+    }
+
+    /**
+     * 3. ADD THIS THIRD: Simple check for max enchants (configurable)
+     */
+    public boolean canAddMoreEnchants(ItemStack item) {
+        try {
+            // Get max from config, default to 5 if not set
+            int maxEnchants = 5; // You can change this or make it configurable
+            try {
+                maxEnchants = plugin.getConfigManager().getInt("config.yml", "enchants.max-enchants-per-item", 5);
+            } catch (Exception e) {
+                plugin.getLogger().info("Using default max enchants: 5");
+            }
+
+            // Count current enchants
+            Map<String, Integer> currentEnchants = getAllCustomEnchants(item);
+            boolean canAdd = currentEnchants.size() < maxEnchants;
+
+            plugin.getLogger().info("Current enchants: " + currentEnchants.size() + ", Max: " + maxEnchants + ", Can add: " + canAdd);
+            return canAdd;
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error checking max enchants: " + e.getMessage());
+            return true; // Default to allowing if error
+        }
+    }
+
+    /**
+     * ENHANCED: Removes a custom enchant from an item with better lore cleanup
      */
     public ItemStack removeEnchant(ItemStack item) {
         if (!hasCustomEnchant(item)) return item;
@@ -328,15 +763,44 @@ public class EnchantManager {
 
         if (meta == null) return item;
 
+        // Get the enchant name before removing it (for better lore cleanup)
+        CustomEnchant currentEnchant = getCustomEnchant(item);
+
         // Remove persistent data
         PersistentDataContainer container = meta.getPersistentDataContainer();
         container.remove(enchantKey);
         container.remove(levelKey);
 
-        // Remove enchant from lore
+        // ENHANCED: Remove enchant from lore with better matching
         if (meta.hasLore()) {
-            List<String> lore = meta.getLore();
-            lore.removeIf(line -> line.contains("§d") && line.contains("§l"));
+            List<String> lore = new ArrayList<>(meta.getLore());
+
+            // Remove lines containing the specific enchant name
+            if (currentEnchant != null) {
+                String enchantName = stripColorCodes(currentEnchant.getDisplayName()).toLowerCase();
+                lore.removeIf(line -> {
+                    if (line == null) return false;
+                    String strippedLine = stripColorCodes(line).toLowerCase();
+                    boolean shouldRemove = strippedLine.contains(enchantName);
+                    if (shouldRemove) {
+                        plugin.getLogger().info("Removing enchant lore during removeEnchant: " + line);
+                    }
+                    return shouldRemove;
+                });
+            } else {
+                // Fallback: remove any line that looks like an enchant line
+                lore.removeIf(line -> {
+                    if (line == null) return false;
+                    String strippedLine = stripColorCodes(line).toLowerCase();
+                    boolean isEnchantLine = strippedLine.matches(".*\\b(i{1,3}|iv|v|vi{1,3}|ix|x)\\b.*") &&
+                            (line.contains("§") || line.contains("&"));
+                    if (isEnchantLine) {
+                        plugin.getLogger().info("Removing potential enchant lore during removeEnchant: " + line);
+                    }
+                    return isEnchantLine;
+                });
+            }
+
             meta.setLore(lore);
         }
 
@@ -346,6 +810,9 @@ public class EnchantManager {
         }
 
         result.setItemMeta(meta);
+
+        plugin.getLogger().info("Removed enchant from item, remaining lore: " + (meta.hasLore() ? meta.getLore() : "none"));
+
         return result;
     }
 

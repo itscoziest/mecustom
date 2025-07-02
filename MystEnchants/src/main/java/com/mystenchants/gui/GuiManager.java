@@ -171,6 +171,9 @@ public class GuiManager {
             if (enchant.getName().equals("zetsubo")) {
                 continue; // Don't auto-unlock Zetsubo
             }
+            if (enchant.getName().equals("redemption")) {
+                continue; // Don't auto-unlock Redemption - only unlocked through boss defeat
+            }
             // Check if player has this enchant
             int currentLevel = playerData.getEnchantLevel(player.getUniqueId(), enchant.getName()).join();
             if (currentLevel == 0) {
@@ -410,6 +413,10 @@ public class GuiManager {
             // SKIP Zetsubo - it requires special sacrifice unlock
             if (enchant.getName().equals("zetsubo")) {
                 continue; // Don't auto-unlock Zetsubo
+            }
+            // SKIP Redemption - it requires boss defeat unlock
+            if (enchant.getName().equals("redemption")) {
+                continue; // Don't auto-unlock Redemption
             }
 
             if (!playerEnchants.containsKey(enchant.getName())) {
@@ -884,10 +891,14 @@ public class GuiManager {
         lore.add("");
         lore.add(ColorUtils.color("&eClick to view details!"));
 
-        // FIXED: Use gray dye if locked, tier dye if unlocked
+        // FIXED: Material selection with special cases
+        // FIXED: Material selection with special cases - FORCE PINK FOR ZETSUBO
         Material displayMaterial;
-        if (currentLevel > 0) {
-            // Player has unlocked this enchant - use tier material
+        if (enchant.getName().equals("zetsubo")) {
+            // ZETSUBO: Always show pink dye when it appears in Oracle (regardless of level)
+            displayMaterial = Material.PINK_DYE;
+        } else if (currentLevel > 0) {
+            // Other enchants: Use tier material when unlocked
             displayMaterial = enchant.getTier().getGuiItem();
         } else {
             // Player hasn't unlocked this enchant - use gray dye
@@ -940,7 +951,7 @@ public class GuiManager {
     }
 
     /**
-     * FIXED: Creates soul shop book with comprehensive status checking
+     * FIXED: Creates soul shop book with special redemption handling
      */
     private ItemStack createSoulShopBook(CustomEnchant enchant, int level, Player player, Map<String, Integer> playerEnchants) {
         String costPath = "shop.items." + enchant.getName() + "-book-level-" + level + ".cost";
@@ -950,15 +961,100 @@ public class GuiManager {
 
         Integer currentLevel = playerEnchants.get(enchant.getName());
 
-        // FIXED: Comprehensive status checking
+        // SPECIAL HANDLING FOR REDEMPTION ENCHANT
+        if (enchant.getName().equals("redemption")) {
+
+            plugin.getLogger().info("=== REDEMPTION DEBUG ===");
+            plugin.getLogger().info("Player: " + player.getName());
+            plugin.getLogger().info("currentLevel from playerEnchants map: " + currentLevel);
+            plugin.getLogger().info("playerEnchants map contains redemption: " + playerEnchants.containsKey("redemption"));
+            plugin.getLogger().info("Full playerEnchants map: " + playerEnchants);
+
+            // Double-check by querying database directly
+            try {
+                int dbLevel = plugin.getPlayerDataManager().getEnchantLevel(player.getUniqueId(), "redemption").join();
+                plugin.getLogger().info("Direct database query level: " + dbLevel);
+            } catch (Exception e) {
+                plugin.getLogger().info("Error querying database: " + e.getMessage());
+            }
+
+
+            // Check if player has unlocked redemption through boss defeat
+            boolean hasRedemptionUnlocked = (currentLevel != null && currentLevel >= 1);
+
+
+
+            List<String> lore = new ArrayList<>();
+
+
+
+            if (hasRedemptionUnlocked) {
+
+
+                plugin.getLogger().info("hasRedemptionUnlocked: " + hasRedemptionUnlocked);
+                plugin.getLogger().info("=== END REDEMPTION DEBUG ===");
+
+
+                lore.add(ColorUtils.color("&a&l✓ UNLOCKED"));
+                lore.add("");
+                lore.add(ColorUtils.color("&7You have proven yourself worthy"));
+                lore.add(ColorUtils.color("&7by defeating the Redemption Boss!"));
+                lore.add("");
+                lore.add(ColorUtils.color("&6Effect:"));
+                lore.add(ColorUtils.color("&fKeep this item upon death"));
+                lore.add(ColorUtils.color("&7(One-time use, enchant is consumed)"));
+                lore.add("");
+                lore.add(ColorUtils.color("&6&lDrag and drop onto item to apply!"));
+                lore.add(ColorUtils.color("&aClick to get another redemption dye!"));
+            } else {
+                lore.add(ColorUtils.color("&c&l✗ LOCKED - DEFEAT REDEMPTION BOSS"));
+                lore.add("");
+                lore.add(ColorUtils.color("&6Effect:"));
+                lore.add(ColorUtils.color("&fKeep this item upon death"));
+                lore.add(ColorUtils.color("&7(One-time use, enchant is consumed)"));
+                lore.add("");
+                lore.add(ColorUtils.color("&cRequirements:"));
+                lore.add(ColorUtils.color("&7Defeat the Redemption Boss"));
+                lore.add("");
+                lore.add(ColorUtils.color("&7Use &f/redemption &7to start the fight"));
+                lore.add(ColorUtils.color("&c&lWARNING: &7Extremely difficult!"));
+                lore.add(ColorUtils.color("&7You will lose all items if you die!"));
+            }
+
+            lore.add("");
+            lore.add(ColorUtils.color("&a&lApplicable To:"));
+            for (Material material : enchant.getApplicableItems()) {
+                String itemName = formatMaterialName(material);
+                lore.add(ColorUtils.color("&7• " + itemName));
+            }
+
+            String itemName = enchant.getTier().getColor() + "&l" + enchant.getDisplayName() + " Enchant";
+
+            // REDEMPTION MATERIAL: Pink if unlocked through boss defeat, Gray if locked
+            Material bookMaterial = hasRedemptionUnlocked ? Material.PINK_DYE : Material.GRAY_DYE;
+
+            ItemStack book = createItemStack(bookMaterial, ColorUtils.color(itemName), lore);
+
+            // Add glow if unlocked
+            if (hasRedemptionUnlocked) {
+                ItemMeta meta = book.getItemMeta();
+                if (meta != null) {
+                    meta.addEnchant(org.bukkit.enchantments.Enchantment.LUCK, 1, true);
+                    meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+                    book.setItemMeta(meta);
+                }
+            }
+
+            // CRITICAL: This return statement prevents the regular enchant logic from running
+            return book;
+        }
+
+        // REGULAR ENCHANT LOGIC (NON-REDEMPTION)
         boolean isPurchasable = canPurchaseEnchantLevel(player, enchant, level, playerEnchants);
         boolean meetsRequirements = effectivelyMeetsRequirements(player, enchant, level, playerEnchants);
         String statusMessage = "";
 
-
-
-
-        // FIXED: Determine status message based on comprehensive checks
+        // Determine status message based on comprehensive checks
         if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
             statusMessage = ColorUtils.color("&c&l✗ REQUIRES LEVEL " + (level - 1));
             isPurchasable = false;
@@ -974,7 +1070,7 @@ public class GuiManager {
         lore.add(statusMessage);
         lore.add("");
 
-        // FIXED: Lore description
+        // Lore description
         if (currentLevel != null && currentLevel >= level) {
             lore.add(ColorUtils.color("&7Purchase additional " + enchant.getDisplayName() + " Level " + level));
             lore.add(ColorUtils.color("&7enchant books for backup use"));
@@ -997,7 +1093,7 @@ public class GuiManager {
         }
         lore.add("");
 
-        // FIXED: Show requirements only when truly not met
+        // Show requirements only when truly not met
         if (!meetsRequirements) {
             if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
                 lore.add(ColorUtils.color("&c&lRequirements:"));
@@ -1014,8 +1110,6 @@ public class GuiManager {
             }
             lore.add("");
         }
-
-
 
         // Add cost and purchase info
         lore.add(ColorUtils.color("&7Cost: &6" + cost + " souls"));
@@ -1038,7 +1132,7 @@ public class GuiManager {
         }
         itemName += " Enchant";
 
-        // FIXED: Material selection - use tier material when purchasable
+        // Material selection - use tier material when purchasable
         Material bookMaterial;
         if (isPurchasable) {
             bookMaterial = enchant.getTier().getGuiItem(); // Use tier material
@@ -1048,7 +1142,7 @@ public class GuiManager {
 
         ItemStack book = createItemStack(bookMaterial, ColorUtils.color(itemName), lore);
 
-        // FIXED: Add glow effect for ALL purchasable items
+        // Add glow effect for ALL purchasable items
         if (isPurchasable) {
             ItemMeta meta = book.getItemMeta();
             if (meta != null) {
@@ -1060,6 +1154,7 @@ public class GuiManager {
 
         return book;
     }
+
 
 
     /**

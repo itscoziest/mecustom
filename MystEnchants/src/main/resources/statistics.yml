@@ -351,31 +351,3 @@ debug:
   monitor-performance: true
   log-slow-operations: true
   slow-operation-threshold: 1000 # milliseconds
-
-# Compatibility settings
-compatibility:
-  # WorldGuard integration
-  worldguard:
-    enabled: false
-    respect-build-flag: true
-    respect-pvp-flag: true
-
-  # Factions integration
-  factions:
-    enabled: false
-    track-in-wilderness: true
-    track-in-own-territory: true
-    track-in-enemy-territory: false
-
-  # Towny integration
-  towny:
-    enabled: false
-    track-in-wilderness: true
-    track-in-own-town: true
-    track-in-other-towns: false
-
-  # GriefPrevention integration
-  griefprevention:
-    enabled: false
-    track-in-claims: true
-    track-outside-claims: true

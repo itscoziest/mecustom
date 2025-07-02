@@ -1,6 +1,7 @@
 package com.mystenchants.managers;
 
 import com.mystenchants.MystEnchants;
+import com.mystenchants.enchants.CustomEnchant;
 import com.mystenchants.utils.ColorUtils;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
@@ -20,10 +21,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-
-import org.bukkit.inventory.meta.ItemMeta;
-import java.util.List;
-import java.util.Arrays;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -359,36 +356,26 @@ public class ZetsuboSacrificeManager {
                     plugin.getLogger().info("Set Zetsubo level 2 for " + player.getName());
                 });
 
-        // FIXED: Create fallback dye directly without using enchant manager
-        ItemStack zetsuboDye = new ItemStack(Material.PINK_DYE, 1);
-        ItemMeta meta = zetsuboDye.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(ColorUtils.color("&d&lZetsubo Level 1 Enchant"));
-            List<String> lore = Arrays.asList(
-                    ColorUtils.color("&7Apply Zetsubo Level 1 to your armor"),
-                    ColorUtils.color("&7Gives Strength I (requires full set)"),
-                    ColorUtils.color(""),
-                    ColorUtils.color("&a&lApplicable To:"),
-                    ColorUtils.color("&7• Diamond Helmet"),
-                    ColorUtils.color("&7• Netherite Helmet"),
-                    ColorUtils.color("&7• Diamond Chestplate"),
-                    ColorUtils.color("&7• Netherite Chestplate"),
-                    ColorUtils.color("&7• Diamond Leggings"),
-                    ColorUtils.color("&7• Netherite Leggings"),
-                    ColorUtils.color("&7• Diamond Boots"),
-                    ColorUtils.color("&7• Netherite Boots"),
-                    ColorUtils.color(""),
-                    ColorUtils.color("&6&lDrag and drop onto item to apply!"),
-                    ColorUtils.color("&d&lObtained from Sacrifice Ritual")
-            );
-            meta.setLore(lore);
+        // CRITICAL FIX: Use EnchantManager to create proper enchant dye
+        CustomEnchant zetsuboEnchant = plugin.getEnchantManager().getEnchant("zetsubo");
 
-            // Add glow effect
-            meta.addEnchant(org.bukkit.enchantments.Enchantment.LUCK, 1, true);
-            meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
-
-            zetsuboDye.setItemMeta(meta);
+        if (zetsuboEnchant == null) {
+            plugin.getLogger().severe("ERROR: Zetsubo enchant not found in EnchantManager!");
+            player.sendMessage(ColorUtils.color("&cError: Zetsubo enchant not configured properly!"));
+            return;
         }
+
+        // Create proper enchant dye using EnchantManager
+        ItemStack zetsuboDye = plugin.getEnchantManager().createEnchantDye(zetsuboEnchant, 1);
+
+        if (zetsuboDye == null) {
+            plugin.getLogger().severe("ERROR: Failed to create Zetsubo enchant!");
+            player.sendMessage(ColorUtils.color("&cError: Failed to create Zetsubo enchant item!"));
+            return;
+        }
+
+        plugin.getLogger().info("Created Zetsubo dye: " + zetsuboDye.getType() + " with meta: " +
+                (zetsuboDye.hasItemMeta() ? zetsuboDye.getItemMeta().getDisplayName() : "no meta"));
 
         // Give the dye to player
         HashMap<Integer, ItemStack> remaining = player.getInventory().addItem(zetsuboDye);
@@ -396,11 +383,14 @@ public class ZetsuboSacrificeManager {
             player.getWorld().dropItemNaturally(player.getLocation(), item);
         }
 
-        String enchantMessage = "&d&lYou have received the Zetsubo enchant!";
+        String enchantMessage = "&d&lYou have received the Zetsubo Level 1 enchant!";
         player.sendMessage(ColorUtils.color(enchantMessage));
 
         String unlockMessage = "&aBoth Zetsubo Level 1 and 2 are now available in the Soul Shop!";
         player.sendMessage(ColorUtils.color(unlockMessage));
+
+        String instructionMessage = "&6&lDrag and drop this enchant onto your armor to apply it!";
+        player.sendMessage(ColorUtils.color(instructionMessage));
 
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
 

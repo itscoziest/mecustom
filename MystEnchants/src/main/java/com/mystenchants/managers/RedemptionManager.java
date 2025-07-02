@@ -194,7 +194,7 @@ public class RedemptionManager {
             player.sendMessage(ColorUtils.color(message));
 
             player.sendMessage(ColorUtils.color("&7Redemption rewards include:"));
-            player.sendMessage(ColorUtils.color("&7• &dRedemption Enchant Dye"));
+            player.sendMessage(ColorUtils.color("&7• &dRedemption Enchant"));
             player.sendMessage(ColorUtils.color("&7• Other potential boss drops"));
             return;
         }

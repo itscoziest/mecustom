@@ -61,7 +61,7 @@ public class DragDropEnchantListener implements Listener {
         }
 
         if (!isCustomEnchantDye(cursor)) {
-            plugin.getLogger().info("Cursor is not a custom enchant dye");
+            plugin.getLogger().info("Cursor is not a custom enchant");
             return;
         }
 
@@ -113,7 +113,7 @@ public class DragDropEnchantListener implements Listener {
                 event.setCancelled(true);
                 showIncompatibleMessage(player, enchant, current);
             } else {
-                plugin.getLogger().warning("Enchant was null despite being detected as enchant dye");
+                plugin.getLogger().warning("Enchant was null despite being detected as enchant");
             }
         } else {
             plugin.getLogger().info("Action not relevant for drag/drop: " + event.getAction());
@@ -232,11 +232,11 @@ public class DragDropEnchantListener implements Listener {
         boolean hasEnchantKey = container.has(enchantKey, PersistentDataType.STRING);
         boolean hasLevelKey = container.has(levelKey, PersistentDataType.INTEGER);
 
-        plugin.getLogger().info("Checking enchant dye - Has enchant key: " + hasEnchantKey + ", Has level key: " + hasLevelKey);
+        plugin.getLogger().info("Checking enchant - Has enchant key: " + hasEnchantKey + ", Has level key: " + hasLevelKey);
         plugin.getLogger().info("Item type: " + item.getType() + ", Display name: " + (meta.hasDisplayName() ? meta.getDisplayName() : "none"));
 
         if (!hasEnchantKey) {
-            plugin.getLogger().info("No enchant key - not an enchant dye");
+            plugin.getLogger().info("No enchant key - not an enchant");
             return false;
         }
 

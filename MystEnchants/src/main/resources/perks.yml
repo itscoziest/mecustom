@@ -25,9 +25,7 @@ shop:
     glow-available: true
     dim-locked: true
 
-  # FIXED: Complete layout configuration for both pages
   layout:
-    # PAGE 1 ENCHANTS - Common (1), Uncommon (2), Rare (3), Ultimate (4)
     # Common Enchants
     tempo:
       level-1:
@@ -92,7 +90,6 @@ shop:
       level-3:
         slot: 39
 
-  # FIXED: Page 2 layout - Legendary (5) and Mystical (6) enchants only
   layout-page-2:
     # LEGENDARY ENCHANTS - Level 5
     detonate:
@@ -116,7 +113,6 @@ shop:
       level-2:
         slot: 25
 
-  # Items available in soul shop (enchant books) - COMPLETE CONFIGURATION
   items:
     # COMMON ENCHANTS
     tempo-book:
@@ -500,7 +496,7 @@ shop:
 # Page system configuration
 page-system:
   enabled: true
-  items-per-page: 35  # Leave room for navigation
+  items-per-page: 35
   max-pages: 2
 
   # Navigation items
@@ -528,7 +524,6 @@ page-system:
         - "&7Navigate between pages to"
         - "&7view all available enchants"
 
-# UPDATED: Perk Shop Layout - New 4-row GUI positions (slot positions in GUI)
 perk-shop-layout:
   teleport-snowball: 20
   grappling-hook: 21

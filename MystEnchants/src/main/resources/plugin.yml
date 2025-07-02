@@ -2,15 +2,12 @@ name: MystEnchants
 version: ${version}
 main: com.mystenchants.MystEnchants
 author: StrikesDev
-description: Custom enchants, perks, features, and more. Includes mystical Zetsubo sacrifice system.
-website: https://github.com/itscoziest/mecustom
+description: Custom Plugin made for a client inside Halos Development
 api-version: 1.20
 
-# ONLY ESSENTIAL dependencies
 depend: [Vault, WorldGuard, WorldEdit]
 softdepend: [PlaceholderAPI, MythicMobs]
 
-# Load priority
 load: POSTWORLD
 loadbefore: [PlaceholderAPI]
 
@@ -22,10 +19,10 @@ commands:
     usage: |
       /enchants - Open enchants GUI
       /enchants [player] - Show player's enchants (admin)
+      /enchants [player] - Show player's enchants (admin)
       /enchants [player] unlock <enchant> <level> - Unlock enchant (admin)
+      /enchants [player] give <enchant> <level> [amount] - Give enchant dye item (admin)
       /enchants [player] remove <enchant> <level> - Remove enchant (admin)
-      /enchants debug soulshop - Debug soul shop availability
-      /enchants setstat <player> <statistic> <amount> - Set player statistic (admin)
 
   soulshop:
     description: Opens the soul shop GUI
@@ -70,7 +67,6 @@ commands:
       /enchant <player> give <enchant> <level> - Give enchant dye to player
       /enchant <player> apply <enchant> <level> - Apply enchant directly to held item
 
-  # Zetsubo Sacrifice commands
   zetsubo:
     description: Manage Zetsubo sacrifice system
     aliases: [sacrifice, zetsubosacrifice]

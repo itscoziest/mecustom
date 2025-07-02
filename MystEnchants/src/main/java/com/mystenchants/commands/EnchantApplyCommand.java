@@ -281,15 +281,26 @@ public class EnchantApplyCommand implements CommandExecutor, TabCompleter {
                 }
             }
         } else if (args.length == 2) {
-            // Actions
+            List<String> actions = Arrays.asList("unlock", "give", "remove", "setstat");
             if ("give".toLowerCase().startsWith(args[1].toLowerCase())) {
                 completions.add("give");
             }
         } else if (args.length == 3) {
-            // Enchant names
-            for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
-                if (enchant.getName().toLowerCase().startsWith(args[2].toLowerCase())) {
-                    completions.add(enchant.getName());
+            if (args[1].equalsIgnoreCase("setstat")) {
+                // Statistic names for setstat command
+                List<String> stats = Arrays.asList("blocks_mined", "blocks_walked", "wheat_broken",
+                        "creepers_killed", "iron_ingots_traded", "pants_crafted", "souls_collected");
+                for (String stat : stats) {
+                    if (stat.toLowerCase().startsWith(args[2].toLowerCase())) {
+                        completions.add(stat);
+                    }
+                }
+            } else {
+                // Enchant names for other commands
+                for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
+                    if (enchant.getName().toLowerCase().startsWith(args[2].toLowerCase())) {
+                        completions.add(enchant.getName());
+                    }
                 }
             }
         } else if (args.length == 4) {

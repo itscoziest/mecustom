@@ -403,11 +403,11 @@ enchants:
       - "&7Level 2: &fStrength II"
     unlock-requirements:
       level-1:
-        type: SACRIFICE_COMPLETED  # Special requirement type
+        type: SACRIFICE_COMPLETED
         amount: 1
         message: "&cComplete the Zetsubo sacrifice ritual first!"
       level-2:
-        type: SACRIFICE_COMPLETED  # Special requirement type
+        type: SACRIFICE_COMPLETED
         amount: 1
         message: "&cComplete the Zetsubo sacrifice ritual first!"
     requires-full-set: true

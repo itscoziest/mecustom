@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Sound;
 import org.bukkit.Material;
+import org.bukkit.inventory.Inventory;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -46,13 +47,289 @@ public class InventoryClickListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
 
+        // Get basic event info
         Player player = (Player) event.getWhoClicked();
-        String title = ChatColor.stripColor(event.getView().getTitle());
+        Inventory clickedInventory = event.getClickedInventory();
         ItemStack clickedItem = event.getCurrentItem();
+        String title = player.getOpenInventory().getTitle();
+        String cleanTitle = ChatColor.stripColor(title);
+
+// NULL CHECK - Prevent the error you're seeing
+        if (clickedInventory == null) {
+            return;
+        }
+
+// Debug GUI title
+
+        // Handle Oracle GUI clicks FIRST - BEFORE drag/drop system
+        if (cleanTitle.equals("Oracle")) {
+            event.setCancelled(true); // Prevent ALL item manipulation in Oracle
+
+            // If clicked on empty slot or air, do nothing
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                return;
+            }
+
+            if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
+                return;
+            }
+
+            String oracleItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+
+            // Handle Purchase Upgrades button (EXP bottle)
+            if (oracleItemName.contains("Purchase Upgrades")) {
+                player.openInventory(plugin.getGuiManager().createOraclePurchaseGui(player));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+
+            boolean enchantFound = false;
+            for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
+                // Check multiple ways the name might match
+                if (oracleItemName.equalsIgnoreCase(enchant.getDisplayName()) ||
+                        oracleItemName.contains(enchant.getDisplayName()) ||
+                        ChatColor.stripColor(enchant.getDisplayName()).equalsIgnoreCase(oracleItemName)) {
+
+                    plugin.getLogger().info("Opening details for enchant: " + enchant.getName());
+                    player.openInventory(plugin.getGuiManager().createOracleDetailsGui(player, enchant));
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                    enchantFound = true;
+                    return;
+                }
+            }
+
+            if (!enchantFound) {
+            }
+            return;
+        }
+
+// Handle Oracle Purchase GUI clicks - THIS IS THE MISSING PART
+        if (cleanTitle.equals("Purchase Upgrades")) {
+            event.setCancelled(true); // Prevent ALL item manipulation
+
+            // If clicked on empty slot or air, do nothing
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                plugin.getLogger().info("Clicked on empty slot - ignoring");
+                return;
+            }
+
+            if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
+                return;
+            }
+
+            String purchaseItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+
+            boolean upgradeFound = false;
+            for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
+                // Check if the item name contains the enchant's display name (without color codes)
+                String cleanEnchantName = ChatColor.stripColor(enchant.getDisplayName());
+                if (purchaseItemName.contains(cleanEnchantName)) {
+
+                    // Extract level from item name (e.g., "Tempo 2" -> level 2)
+                    String[] parts = purchaseItemName.split(" ");
+                    try {
+                        int targetLevel = Integer.parseInt(parts[parts.length - 1]);
+
+                        // Get current level
+                        int currentLevel = plugin.getPlayerDataManager()
+                                .getEnchantLevel(player.getUniqueId(), enchant.getName()).join();
+
+                        // Verify this is the next level
+                        if (targetLevel != currentLevel + 1) {
+                            player.sendMessage(ColorUtils.color("&cYou must upgrade levels in order!"));
+                            return;
+                        }
+
+                        // Calculate EXP cost
+                        int expCost;
+                        if (enchant.getName().equals("tempo")) {
+                            expCost = targetLevel == 2 ? 30 : 50;
+                        } else if (enchant.getName().equals("scholar")) {
+                            expCost = targetLevel == 2 ? 75 : 130;
+                        } else {
+                            expCost = 50; // Default cost
+                        }
+
+
+                        // Check if player has enough EXP
+                        if (player.getLevel() < expCost) {
+                            player.sendMessage(ColorUtils.color("&cYou need " + expCost + " EXP levels! You have " + player.getLevel()));
+                            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                            return;
+                        }
+
+                        // Deduct EXP and unlock enchant
+                        player.setLevel(player.getLevel() - expCost);
+                        plugin.getPlayerDataManager().unlockEnchant(player.getUniqueId(), enchant.getName(), targetLevel);
+
+                        // Success messages and sound
+                        player.sendMessage(ColorUtils.color("&a&lUPGRADE SUCCESSFUL!"));
+                        player.sendMessage(ColorUtils.color("&aUnlocked " + enchant.getDisplayName() + " Level " + targetLevel + "!"));
+                        player.sendMessage(ColorUtils.color("&7Cost: &c-" + expCost + " EXP levels"));
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
+
+                        // Close GUI and reopen Oracle
+                        player.closeInventory();
+
+                        // Small delay then reopen Oracle main menu
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            player.openInventory(plugin.getGuiManager().createOracleGui(player));
+                            player.sendMessage(ColorUtils.color("&7Upgrade complete! Check your enchant progress."));
+                        }, 10L);
+
+                        upgradeFound = true;
+                        return;
+
+                    } catch (NumberFormatException e) {
+                        continue;
+                    }
+                }
+            }
+
+            if (!upgradeFound) {
+            }
+
+            // Handle Oracle GUI clicks
+            if (cleanTitle.equals("Oracle")) {
+                plugin.getLogger().info("Found Oracle GUI - handling clicks");
+                event.setCancelled(true); // Prevent ALL item manipulation in Oracle
+
+                // If clicked on empty slot or air, do nothing
+                if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                    plugin.getLogger().info("Clicked on empty slot in Oracle - ignoring");
+                    return;
+                }
+
+                if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
+                    plugin.getLogger().info("Clicked item has no meta or name in Oracle - ignoring");
+                    return;
+                }
+
+                String oracleItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+                plugin.getLogger().info("Clicked Oracle item: '" + oracleItemName + "'");
+
+                // Handle Purchase Upgrades button (EXP bottle)
+                if (oracleItemName.contains("Purchase Upgrades")) {
+                    player.openInventory(plugin.getGuiManager().createOraclePurchaseGui(player));
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                    return;
+                }
+
+                // Handle enchant clicks (open details)
+                for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
+                    if (oracleItemName.contains(enchant.getDisplayName())) {
+                        player.openInventory(plugin.getGuiManager().createOracleDetailsGui(player, enchant));
+                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                        return;
+                    }
+                }
+
+                plugin.getLogger().info("Oracle GUI click handled - not a functional item");
+                return; // Don't process any other handlers for Oracle GUI
+            }
+
+            // Handle back button
+            if (purchaseItemName.contains("Back")) {
+                player.openInventory(plugin.getGuiManager().createOracleGui(player));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+
+            return; // Don't process any other handlers for Purchase GUI
+        }
+
+// Add null check for the rest of your existing code
+        if (clickedItem == null) {
+            return;
+        }
+
+
+        if (cleanTitle.equals("Enchants")) {
+            event.setCancelled(true); // Prevent item manipulation
+
+            // If clicked on empty slot or air, do nothing
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                return;
+            }
+
+            if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
+                return;
+            }
+
+            String enchantsItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+
+            // Handle tier button clicks
+            if (enchantsItemName.contains("Common Enchants")) {
+                player.openInventory(plugin.getGuiManager().createTierGui(player, EnchantTier.COMMON));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+            if (enchantsItemName.contains("Uncommon Enchants")) {
+                player.openInventory(plugin.getGuiManager().createTierGui(player, EnchantTier.UNCOMMON));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+            if (enchantsItemName.contains("Rare Enchants")) {
+                player.openInventory(plugin.getGuiManager().createTierGui(player, EnchantTier.RARE));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+            if (enchantsItemName.contains("Ultimate Enchants")) {
+                player.openInventory(plugin.getGuiManager().createTierGui(player, EnchantTier.ULTIMATE));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+            if (enchantsItemName.contains("Legendary Enchants")) {
+                player.openInventory(plugin.getGuiManager().createTierGui(player, EnchantTier.LEGENDARY));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+            if (enchantsItemName.contains("Mystical Enchants")) {
+                player.openInventory(plugin.getGuiManager().createTierGui(player, EnchantTier.MYSTICAL));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+
+            return; // Don't process other handlers for Enchants GUI
+        }
+
+// Handle Tier View GUI clicks (back button)
+        if (cleanTitle.contains("Enchants") && !cleanTitle.equals("Enchants")) {
+            event.setCancelled(true);
+
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                return;
+            }
+
+            if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
+                return;
+            }
+
+            String tierItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+
+            // Handle back button
+            if (tierItemName.contains("Back")) {
+                player.openInventory(plugin.getGuiManager().createEnchantsGui(player));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                return;
+            }
+
+            return;
+        }
+
+// ... rest of your existing InventoryClickListener code goes here
 
         // ADD THIS FOR SOUL SHOP
         if (title.equals("Soul Shop") || title.contains("Soul Shop")) {
             event.setCancelled(true);
+
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                return;
+            }
+
+            if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
+                return;
+            }
 
             if (clickedItem != null && clickedItem.hasItemMeta()) {
                 PersistentDataContainer container = clickedItem.getItemMeta().getPersistentDataContainer();
@@ -64,6 +341,8 @@ public class InventoryClickListener implements Listener {
                 }
             }
         }
+
+
 
         ItemMeta meta = clickedItem.getItemMeta();
         String itemName = ChatColor.stripColor(meta.getDisplayName());
@@ -81,9 +360,84 @@ public class InventoryClickListener implements Listener {
         } else if (title.contains("Details")) {
             event.setCancelled(true);
             handleOracleDetailsGui(player, itemName);
-        } else if (title.equals("Purchase Upgrades")) {
-            event.setCancelled(true);
-            handlePurchaseGui(player, itemName, clickedItem);
+            // Handle Oracle Purchase GUI clicks
+            if (title.equals("Purchase Upgrades")) {
+                event.setCancelled(true);
+
+                if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+
+                String purchaseItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+
+                // Check if clicked item is an enchant upgrade
+                for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
+                    // Check if this is an upgrade for this enchant
+                    if (purchaseItemName.contains(enchant.getDisplayName())) {
+                        // Extract level from item name (e.g., "Tempo 2" -> level 2)
+                        String[] parts = purchaseItemName.split(" ");
+                        try {
+                            int targetLevel = Integer.parseInt(parts[parts.length - 1]);
+
+                            // Get current level
+                            int currentLevel = plugin.getPlayerDataManager()
+                                    .getEnchantLevel(player.getUniqueId(), enchant.getName()).join();
+
+                            // Verify this is the next level
+                            if (targetLevel != currentLevel + 1) {
+                                player.sendMessage(ColorUtils.color("&cYou must upgrade levels in order!"));
+                                return;
+                            }
+
+                            // Calculate EXP cost
+                            int expCost;
+                            if (enchant.getName().equals("tempo")) {
+                                expCost = targetLevel == 2 ? 30 : 50;
+                            } else if (enchant.getName().equals("scholar")) {
+                                expCost = targetLevel == 2 ? 75 : 130;
+                            } else {
+                                expCost = 50; // Default cost
+                            }
+
+                            // Check if player has enough EXP
+                            if (player.getLevel() < expCost) {
+                                player.sendMessage(ColorUtils.color("&cYou need " + expCost + " EXP levels! You have " + player.getLevel()));
+                                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                                return;
+                            }
+
+                            // Deduct EXP and unlock enchant
+                            player.setLevel(player.getLevel() - expCost);
+                            plugin.getPlayerDataManager().unlockEnchant(player.getUniqueId(), enchant.getName(), targetLevel);
+
+                            // Success messages and sound
+                            player.sendMessage(ColorUtils.color("&a&lUPGRADE SUCCESSFUL!"));
+                            player.sendMessage(ColorUtils.color("&aUnlocked " + enchant.getDisplayName() + " Level " + targetLevel + "!"));
+                            player.sendMessage(ColorUtils.color("&7Cost: &c-" + expCost + " EXP levels"));
+                            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
+
+                            // Close GUI and reopen Oracle
+                            player.closeInventory();
+
+                            // Small delay then reopen Oracle main menu
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                player.openInventory(plugin.getGuiManager().createOracleGui(player));
+                                player.sendMessage(ColorUtils.color("&7Upgrade complete! Check your enchant progress."));
+                            }, 10L); // 0.5 second delay
+
+                            return;
+
+                        } catch (NumberFormatException e) {
+                            // Not a level upgrade item
+                            continue;
+                        }
+                    }
+                }
+
+                // Handle back button
+                if (purchaseItemName.contains("Back")) {
+                    player.openInventory(plugin.getGuiManager().createOracleGui(player));
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                }
+            }
         } else if (title.contains("Soul Shop")) {
             event.setCancelled(true); // CRITICAL: Always cancel for soul shop
             handleSoulShopGui(player, itemName, clickedItem);
@@ -95,6 +449,9 @@ public class InventoryClickListener implements Listener {
             handleRedemptionGui(player, itemName);
         }
     }
+
+
+
 
     /**
      * Helper method to check if an inventory title is a GUI
@@ -372,15 +729,12 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
+
+
         // ADD THIS DEBUG SECTION:
         if (clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) {
             String displayName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
 
-            // DEBUG: Log all clicks for troubleshooting
-            plugin.getLogger().info("=== SOUL SHOP CLICK DEBUG ===");
-            plugin.getLogger().info("Player: " + player.getName());
-            plugin.getLogger().info("Item clicked: " + displayName);
-            plugin.getLogger().info("Item material: " + clickedItem.getType());
 
             // Check if this is a glass pane or filler item
             if (displayName.trim().isEmpty() || displayName.equals(" ")) {
@@ -403,7 +757,6 @@ public class InventoryClickListener implements Listener {
                     String cleanLine = ChatColor.stripColor(line).toLowerCase();
                     if (cleanLine.contains("apply") || cleanLine.contains("cost:") || cleanLine.contains("souls")) {
                         isEnchantItem = true;
-                        plugin.getLogger().info("Detected enchant item by lore: " + cleanLine);
                         break;
                     }
                 }
@@ -417,23 +770,16 @@ public class InventoryClickListener implements Listener {
                 String enchantName = extractEnchantName(clickedItem);
                 int enchantLevel = extractEnchantLevel(clickedItem);
 
-                plugin.getLogger().info("Extracted enchant: " + enchantName + ", level: " + enchantLevel);
-
                 if (enchantName != null && enchantLevel > 0) {
                     CustomEnchant enchant = plugin.getEnchantManager().getEnchant(enchantName);
                     if (enchant != null) {
-                        plugin.getLogger().info("Found enchant object, proceeding with purchase");
                         purchaseEnchantBookFixed(player, enchant, enchantLevel, clickedItem);
                         return;
                     } else {
-                        plugin.getLogger().warning("Enchant object is null for: " + enchantName);
                     }
                 } else {
-                    plugin.getLogger().warning("Could not extract enchant name or level from: " + displayName);
                 }
             }
-
-            plugin.getLogger().info("=== END SOUL SHOP CLICK DEBUG ===");
         }
     }
 
@@ -502,9 +848,6 @@ public class InventoryClickListener implements Listener {
                 .replace(" level 3", "")
                 .trim();
 
-        // DEBUG: Add this line temporarily
-        plugin.getLogger().info("DEBUG: Final cleaned name for switch: '" + displayName + "'");
-
         // Map display names to actual enchant names
         switch (displayName) {
             case "tempo": return "tempo";
@@ -532,8 +875,6 @@ public class InventoryClickListener implements Listener {
 
         // FIXED: Check if this is a perk shop item using the PerkManager
         if (!plugin.getPerkManager().isPerkShopItem(clickedItem)) {
-            // Debug: log what was clicked
-            plugin.getLogger().info("Clicked non-perk item: " + itemName + " | Material: " + clickedItem.getType());
             return; // Not a shop item, ignore
         }
 
@@ -609,6 +950,8 @@ public class InventoryClickListener implements Listener {
                             });
                 });
     }
+
+
 
     /**
      * FIXED: Purchase method with comprehensive requirement checking

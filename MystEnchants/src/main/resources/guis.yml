@@ -1,4 +1,3 @@
-# Updated guis.yml with 4-row Perks GUI
 guis:
   # Main Enchants GUI
   enchants:
@@ -71,7 +70,7 @@ guis:
           - "&eClick to view enchants!"
         glow: false
       mystical:
-        slot: 25
+        slot: 31
         material: PINK_DYE
         name: "&d&lMystical Enchants"
         lore:
@@ -102,6 +101,19 @@ guis:
   oracle:
     title: "&6&lOracle"
     size: 54
+    enchant-slots:
+      TEMPO: 19
+      SCHOLAR: 20
+      SERRATE: 21
+      REJUVENATE: 22
+      BACKUP: 23
+      GUILLOTINE: 24
+      PACE: 25
+      PANTSED: 29
+      DETONATE: 30
+      ALMIGHTY_PUSH: 31
+      REDEMPTION: 32
+      ZETSUBO: 33
     items:
       purchase-section:
         slot: 53
@@ -132,11 +144,10 @@ guis:
           - "&7Use the Purchase section to"
           - "&7upgrade with EXP levels!"
 
-  # Oracle Details GUI (Enhanced with specific layout)
+  # Oracle Details GUI
   oracle-details:
     title: "&6&l{enchant} Details"
     size: 27
-    # Visual settings
     settings:
       show-progress-bars: true
       show-effect-descriptions: true
@@ -197,8 +208,6 @@ guis:
           - "&7or right-click to apply them!"
           - ""
           - "&6Page 1 of 2"
-
-    # Enhanced status indicators with proper color codes
     status-indicators:
       owned:
         material: LIME_DYE
@@ -266,8 +275,6 @@ guis:
           - "&7or right-click to apply them!"
           - ""
           - "&6Page 2 of 2"
-
-    # Same status indicators as page 1
     status-indicators:
       owned:
         material: LIME_DYE
@@ -307,12 +314,10 @@ guis:
       highlight-available: true
       dim-unavailable: true
 
-  # UPDATED: Perks GUI - 4 rows (36 slots) with perks starting at slot 20
   perks:
     title: "&6&lPerks"
-    size: 36  # CHANGED: 4 rows instead of 6 (was 54)
+    size: 36
     items:
-      # Info item remains at top center
       info-item:
         slot: 4
         material: NETHER_STAR
@@ -326,10 +331,9 @@ guis:
           - ""
           - "&7Some perks require multiple hits"
           - "&7or specific conditions to activate."
-
-      # UPDATED: All perks now start from slot 20 (3rd row)
+          -
       teleport-snowball:
-        slot: 20  # CHANGED: was 10, now 20
+        slot: 20
         material: SNOWBALL
         name: "&b&lTeleport Snowball"
         lore:
@@ -342,7 +346,7 @@ guis:
           - "&eClick to purchase!"
 
       grappling-hook:
-        slot: 21  # CHANGED: was 11, now 21
+        slot: 21
         material: FISHING_ROD
         name: "&a&lGrappling Hook"
         lore:
@@ -355,7 +359,7 @@ guis:
           - "&eClick to purchase!"
 
       snowman-egg:
-        slot: 22  # CHANGED: was 12, now 22
+        slot: 22
         material: PUMPKIN
         name: "&f&lSnowman Egg"
         lore:
@@ -368,7 +372,7 @@ guis:
           - "&eClick to purchase!"
 
       spellbreaker:
-        slot: 23  # CHANGED: was 13, now 23
+        slot: 23
         material: BLAZE_ROD
         name: "&6&lSpellbreaker"
         lore:
@@ -381,7 +385,7 @@ guis:
           - "&eClick to purchase!"
 
       tradeoff-egg:
-        slot: 24  # CHANGED: was 14, now 24
+        slot: 24
         material: EGG
         name: "&e&lTradeoff Egg"
         lore:
@@ -394,7 +398,7 @@ guis:
           - "&eClick to purchase!"
 
       worthy-sacrifice:
-        slot: 29  # CHANGED: was 15, now 29 (4th row, 2nd slot)
+        slot: 29
         material: WITCH_SPAWN_EGG
         name: "&5&lWorthy Sacrifice"
         lore:
@@ -407,7 +411,7 @@ guis:
           - "&eClick to purchase!"
 
       lovestruck:
-        slot: 30  # CHANGED: was 16, now 30 (4th row, 3rd slot)
+        slot: 30
         material: ROSE_BUSH
         name: "&d&lLovestruck"
         lore:
@@ -471,21 +475,21 @@ guis:
 oracle-details-layout:
   # Single level enchants (like Almighty Push, Redemption)
   single-level:
-    enchant-slot: 13  # Center slot
+    enchant-slot: 13
 
   # Two level enchants (like some enchants with 2 levels)
   two-level:
-    level-1-slot: 11      # Level 1 enchant info
-    glass-slots: [12, 13] # Yellow/Gray glass between levels
-    level-2-slot: 14      # Level 2 enchant info
+    level-1-slot: 11
+    glass-slots: [12, 13]
+    level-2-slot: 14
 
   # Three level enchants (like most standard enchants)
   three-level:
-    level-1-slot: 10      # Level 1 enchant info
-    glass-1-slots: [11, 12] # Yellow/Gray glass after level 1
-    level-2-slot: 13      # Level 2 enchant info
-    glass-2-slots: [14, 15] # Yellow/Red glass after level 2
-    level-3-slot: 16      # Level 3 enchant info
+    level-1-slot: 10
+    glass-1-slots: [11, 12]
+    level-2-slot: 13
+    glass-2-slots: [14, 15]
+    level-3-slot: 16
 
   # Glass pane materials for different states
   glass-materials:
@@ -505,17 +509,13 @@ oracle-details-layout:
     current-level: "&7Current level: &a{level}"
 
   progress-display:
-    # Show both percentage and current/max
     show-percentage: true
     show-current-max: true
-    # Format for progress lines
     format: "&7Progress: &f{percentage}% &7({current}/{max})"
-    # Compact format for limited space
     compact-format: "&f{current}&7/&f{max} &7({percentage}%)"
 
 # Oracle progression visual configuration (legacy support)
 oracle-progression:
-  # Materials for different states
   unlocked-material: YELLOW_STAINED_GLASS_PANE
   completed-material: LIME_STAINED_GLASS_PANE
   locked-material: GRAY_STAINED_GLASS_PANE
@@ -558,12 +558,6 @@ fill-items:
     material: BLACK_STAINED_GLASS_PANE
     name: " "
     lore: []
-
-# GUI Animation Settings (optional)
-animations:
-  enabled: false
-  title-update-interval: 20 # ticks
-  item-glow-interval: 40 # ticks
 
 # GUI Sound Effects
 sounds:

@@ -48,20 +48,12 @@ public class DragDropEnchantListener implements Listener {
         ItemStack cursor = event.getCursor();
         ItemStack current = event.getCurrentItem();
 
-        // Debug logging
-        plugin.getLogger().info("=== DRAG DROP DEBUG ===");
-        plugin.getLogger().info("Player: " + player.getName());
-        plugin.getLogger().info("Action: " + event.getAction());
-        plugin.getLogger().info("Cursor: " + (cursor != null ? cursor.getType() + " - " + (cursor.hasItemMeta() ? cursor.getItemMeta().getDisplayName() : "no meta") : "null"));
-        plugin.getLogger().info("Current: " + (current != null ? current.getType() : "null"));
-
         if (cursor == null) {
             plugin.getLogger().info("Cursor is null, returning");
             return;
         }
 
         if (!isCustomEnchantDye(cursor)) {
-            plugin.getLogger().info("Cursor is not a custom enchant");
             return;
         }
 

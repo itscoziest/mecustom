@@ -241,10 +241,8 @@ public class EnchantManager {
             NamespacedKey specificKey = new NamespacedKey(plugin, "enchant_" + enchantName);
 
             boolean hasSpecific = container.has(specificKey, PersistentDataType.INTEGER);
-            plugin.getLogger().info("Checking for specific enchant " + enchantName + ": " + hasSpecific);
             return hasSpecific;
         } catch (Exception e) {
-            plugin.getLogger().warning("Error checking specific enchant " + enchantName + ": " + e.getMessage());
             return false;
         }
     }
@@ -902,8 +900,6 @@ public class EnchantManager {
         // Special case for Zetsubo enchants - must complete sacrifice first
         if (enchantName.equals("zetsubo")) {
             boolean hasCompletedSacrifice = plugin.getZetsuboSacrificeManager().hasCompletedSacrifice(player.getUniqueId());
-            plugin.getLogger().info("Checking Zetsubo requirements for " + player.getName() +
-                    " level " + level + " - sacrifice completed: " + hasCompletedSacrifice);
 
             if (!hasCompletedSacrifice) {
                 return CompletableFuture.completedFuture(false); // Must complete sacrifice first

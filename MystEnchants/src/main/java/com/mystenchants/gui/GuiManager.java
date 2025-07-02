@@ -109,7 +109,6 @@ public class GuiManager {
 
         // Add tier buttons (Skip mystical for main GUI)
         for (EnchantTier tier : EnchantTier.values()) {
-            if (tier == EnchantTier.MYSTICAL) continue;
 
             GuiItem tierItem = template.getItems().get(tier.name().toLowerCase());
             if (tierItem != null) {
@@ -166,33 +165,40 @@ public class GuiManager {
         Inventory inventory = Bukkit.createInventory(null, template.getSize(), template.getTitle());
 
         PlayerDataManager playerData = plugin.getPlayerDataManager();
-        Map<String, Integer> playerEnchants = playerData.getPlayerEnchants(player.getUniqueId()).join();
 
-        int slot = 10;
-        for (EnchantTier tier : EnchantTier.values()) {
-            List<CustomEnchant> tierEnchants = plugin.getEnchantManager().getEnchantsByTier(tier);
-
-            for (CustomEnchant enchant : tierEnchants) {
-                if (playerEnchants.containsKey(enchant.getName())) {
-                    if (slot > 43) break;
-
-                    ItemStack item = createOracleEnchantItem(enchant, player);
-                    inventory.setItem(slot, item);
-
-                    slot++;
-                    if (slot % 9 == 8) slot += 2;
-                }
+        // Auto-unlock Level 1 for all enchants
+        for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
+            if (enchant.getName().equals("zetsubo")) {
+                continue; // Don't auto-unlock Zetsubo
+            }
+            // Check if player has this enchant
+            int currentLevel = playerData.getEnchantLevel(player.getUniqueId(), enchant.getName()).join();
+            if (currentLevel == 0) {
+                // Auto-unlock Level 1
+                plugin.getPlayerDataManager().unlockEnchant(player.getUniqueId(), enchant.getName(), 1);
             }
         }
 
-        // Add purchase section button
+        // Now get updated enchant list
+        Map<String, Integer> playerEnchants = playerData.getPlayerEnchants(player.getUniqueId()).join();
+
+        // Add enchants using configurable slots from guis.yml
+        for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
+            // Show all enchants since Level 1 is auto-unlocked
+            int slot = getOracleEnchantSlot(enchant.getName());
+            if (slot != -1) {
+                ItemStack item = createOracleEnchantItem(enchant, player);
+                inventory.setItem(slot, item);
+            }
+        }
+
+        // Add static items (purchase section, info item)
         GuiItem purchaseItem = template.getItems().get("purchase-section");
         if (purchaseItem != null) {
             ItemStack item = createItemStack(purchaseItem.getMaterial(), purchaseItem.getName(), purchaseItem.getLore());
             inventory.setItem(purchaseItem.getSlot(), item);
         }
 
-        // Add info item
         GuiItem infoItem = template.getItems().get("info-item");
         if (infoItem != null) {
             ItemStack item = createItemStack(infoItem.getMaterial(), infoItem.getName(), infoItem.getLore());
@@ -202,6 +208,23 @@ public class GuiManager {
         fillEmptySlots(inventory);
         return inventory;
     }
+
+
+    /**
+     * Gets the configured Oracle slot for a specific enchant
+     */
+    private int getOracleEnchantSlot(String enchantName) {
+        String slotPath = "guis.oracle.enchant-slots." + enchantName.toUpperCase();
+        int slot = plugin.getConfigManager().getGuisConfig().getInt(slotPath, -1);
+
+        // Return the slot if it's valid (within GUI bounds)
+        if (slot >= 0 && slot < 54) {
+            return slot;
+        }
+
+        return -1; // Invalid slot, don't place enchant
+    }
+
 
     /**
      * FIXED: Creates enchant details GUI with SINGLE progress display
@@ -278,6 +301,7 @@ public class GuiManager {
 
     private void createRedemptionLayout(Inventory inventory, CustomEnchant enchant, int currentLevel, Player player) {
         List<String> lore = new ArrayList<>();
+
 
         if (currentLevel >= 1) {
             lore.add(ColorUtils.color("&a&l✓ REDEMPTION UNLOCKED"));
@@ -368,34 +392,57 @@ public class GuiManager {
                 lore);
     }
 
-    /**
-     * Creates the oracle purchase GUI
-     */
     public Inventory createOraclePurchaseGui(Player player) {
         String title = ColorUtils.color("&a&lPurchase Upgrades");
         Inventory inventory = Bukkit.createInventory(null, 54, title);
 
         PlayerDataManager playerData = plugin.getPlayerDataManager();
-        Map<String, Integer> playerEnchants = playerData.getPlayerEnchants(player.getUniqueId()).join();
+
+        // Get ALL enchants and auto-unlock Level 1 for everyone
+        Map<String, Integer> playerEnchants = new HashMap<>();
+
+        // First, get existing player enchants
+        Map<String, Integer> existingEnchants = playerData.getPlayerEnchants(player.getUniqueId()).join();
+        playerEnchants.putAll(existingEnchants);
+
+        // Auto-unlock Level 1 for all enchants if not already unlocked
+        for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
+            // SKIP Zetsubo - it requires special sacrifice unlock
+            if (enchant.getName().equals("zetsubo")) {
+                continue; // Don't auto-unlock Zetsubo
+            }
+
+            if (!playerEnchants.containsKey(enchant.getName())) {
+                // Auto-unlock Level 1 for other enchants
+                playerEnchants.put(enchant.getName(), 1);
+                // Also unlock in database
+                plugin.getPlayerDataManager().unlockEnchant(player.getUniqueId(), enchant.getName(), 1);
+            }
+        }
+
 
         int slot = 10;
         int upgradesFound = 0;
 
         for (Map.Entry<String, Integer> entry : playerEnchants.entrySet()) {
-            CustomEnchant enchant = plugin.getEnchantManager().getEnchant(entry.getKey());
+            String enchantName = entry.getKey();
             int currentLevel = entry.getValue();
 
+
+            CustomEnchant enchant = plugin.getEnchantManager().getEnchant(enchantName);
+
             if (enchant != null && currentLevel < enchant.getMaxLevel()) {
+
                 if (slot > 43) break;
 
-                int nextLevel = currentLevel + 1;
-                UnlockRequirement req = enchant.getUnlockRequirement(nextLevel);
-
-                boolean isExpUpgrade = (req == null ||
-                        req.getType() == RequirementType.NONE ||
-                        req.getType() == RequirementType.EXP_LEVELS);
+                // Check if this enchant can be upgraded with EXP
+                boolean isExpUpgrade = false;
+                if (enchant.getName().equals("tempo") || enchant.getName().equals("scholar")) {
+                    isExpUpgrade = true;
+                }
 
                 if (isExpUpgrade) {
+                    int nextLevel = currentLevel + 1;
                     ItemStack item = createPurchaseItem(enchant, player, nextLevel);
                     inventory.setItem(slot, item);
                     upgradesFound++;
@@ -406,6 +453,7 @@ public class GuiManager {
             }
         }
 
+        // If no upgrades found, add info item
         if (upgradesFound == 0) {
             ItemStack infoItem = createItemStack(Material.BARRIER,
                     ColorUtils.color("&c&lNo EXP Upgrades Available"),
@@ -417,11 +465,12 @@ public class GuiManager {
                             ColorUtils.color("&7• &bTempo &7(Mining speed)"),
                             ColorUtils.color("&7• &bScholar &7(More EXP from kills)"),
                             ColorUtils.color(""),
-                            ColorUtils.color("&7Unlock these from the Soul Shop first!")
+                            ColorUtils.color("&7These are auto-unlocked at Level 1!")
                     ));
             inventory.setItem(22, infoItem);
         }
 
+        // Add back button
         GuiTemplate template = templates.get("oracle-purchase");
         if (template != null && template.getBackButton() != null) {
             GuiItem backButton = template.getBackButton();
@@ -486,7 +535,13 @@ public class GuiManager {
         Map<String, Integer> playerEnchants = plugin.getPlayerDataManager().getPlayerEnchants(player.getUniqueId()).join();
 
         // PAGE 2 ENCHANTS: Pace, Pantsed, Detonate, Almighty Push, Redemption, Zetsubo
-        String[] page2Enchants = {"pace", "pantsed", "detonate", "almighty_push", "redemption", "zetsubo"};
+        String[] page2Enchants = {
+                "pace", "pantsed",
+                // Legendary enchants (Level 5)
+                "detonate", "almighty_push",
+                // Mystical enchants (Level 6) - REDEMPTION REMOVED
+                "redemption", "zetsubo"
+        };
         int[] baseSlots = {10, 11, 12, 13, 15, 16}; // Starting at row 1, almighty_push at 13 (beside detonate)
 
         for (int i = 0; i < page2Enchants.length; i++) {
@@ -829,13 +884,34 @@ public class GuiManager {
         lore.add("");
         lore.add(ColorUtils.color("&eClick to view details!"));
 
-        return createItemStack(enchant.getTier().getGuiItem(),
+        // FIXED: Use gray dye if locked, tier dye if unlocked
+        Material displayMaterial;
+        if (currentLevel > 0) {
+            // Player has unlocked this enchant - use tier material
+            displayMaterial = enchant.getTier().getGuiItem();
+        } else {
+            // Player hasn't unlocked this enchant - use gray dye
+            displayMaterial = Material.GRAY_DYE;
+        }
+
+        return createItemStack(displayMaterial,
                 ColorUtils.color(enchant.getTier().getColor() + "&l" + enchant.getDisplayName()), lore);
     }
 
     private ItemStack createPurchaseItem(CustomEnchant enchant, Player player, int level) {
-        int expCost = plugin.getConfigManager().getInt("config.yml",
-                "exp-costs." + enchant.getName() + ".level-" + level, 50);
+        // Get EXP cost - different costs for different enchants
+        int expCost;
+        if (enchant.getName().equals("tempo")) {
+            // TEMPO costs: Level 2 = 30 EXP, Level 3 = 50 EXP
+            expCost = level == 2 ? 30 : 50;
+        } else if (enchant.getName().equals("scholar")) {
+            // SCHOLAR costs: Level 2 = 75 EXP, Level 3 = 130 EXP (from enchants.yml)
+            expCost = level == 2 ? 75 : 130;
+        } else {
+            // Default cost for other enchants
+            expCost = plugin.getConfigManager().getInt("config.yml",
+                    "exp-costs." + enchant.getName() + ".level-" + level, 50);
+        }
 
         List<String> lore = new ArrayList<>();
         lore.add(ColorUtils.color("&7Upgrade to Level " + level));
@@ -843,11 +919,20 @@ public class GuiManager {
         lore.add(ColorUtils.color("&7Cost: &a" + expCost + " EXP Levels"));
         lore.add("");
 
+        // Show current effect vs next level effect
+        String currentEffect = getEnchantLevelEffectDescription(enchant, level - 1);
+        String nextEffect = getEnchantLevelEffectDescription(enchant, level);
+
+        lore.add(ColorUtils.color("&7Current Effect: &f" + currentEffect));
+        lore.add(ColorUtils.color("&7Next Level: &a" + nextEffect));
+        lore.add("");
+
         if (player.getLevel() >= expCost) {
             lore.add(ColorUtils.color("&aYou can afford this upgrade!"));
             lore.add(ColorUtils.color("&eClick to purchase!"));
         } else {
             lore.add(ColorUtils.color("&cYou need " + (expCost - player.getLevel()) + " more EXP levels!"));
+            lore.add(ColorUtils.color("&7Current EXP: &f" + player.getLevel() + " levels"));
         }
 
         return createItemStack(enchant.getTier().getGuiItem(),
@@ -869,6 +954,9 @@ public class GuiManager {
         boolean isPurchasable = canPurchaseEnchantLevel(player, enchant, level, playerEnchants);
         boolean meetsRequirements = effectivelyMeetsRequirements(player, enchant, level, playerEnchants);
         String statusMessage = "";
+
+
+
 
         // FIXED: Determine status message based on comprehensive checks
         if (level > 1 && (currentLevel == null || currentLevel < level - 1)) {
@@ -926,6 +1014,8 @@ public class GuiManager {
             }
             lore.add("");
         }
+
+
 
         // Add cost and purchase info
         lore.add(ColorUtils.color("&7Cost: &6" + cost + " souls"));

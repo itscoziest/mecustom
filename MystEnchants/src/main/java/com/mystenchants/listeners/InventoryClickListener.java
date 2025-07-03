@@ -45,6 +45,10 @@ public class InventoryClickListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+
         if (!(event.getWhoClicked() instanceof Player)) return;
 
         // Get basic event info
@@ -54,42 +58,39 @@ public class InventoryClickListener implements Listener {
         String title = player.getOpenInventory().getTitle();
         String cleanTitle = ChatColor.stripColor(title);
 
+
+        if (clickedItem == null || clickedItem.getType() == org.bukkit.Material.AIR) {
+            return;
+        }
+
+
         // NULL CHECK - Prevent the error you're seeing
         if (clickedInventory == null) {
             return;
         }
 
         // EMERGENCY DEBUG: Log ALL clicks to see what's happening
-        plugin.getLogger().info("=== CLICK DEBUG ===");
-        plugin.getLogger().info("Title: '" + title + "'");
-        plugin.getLogger().info("Clean title: '" + cleanTitle + "'");
-        plugin.getLogger().info("Clicked item: " + (clickedItem != null ? clickedItem.getType() : "NULL"));
         if (clickedItem != null && clickedItem.hasItemMeta() && clickedItem.getItemMeta().getDisplayName() != null) {
-            plugin.getLogger().info("Item name: '" + clickedItem.getItemMeta().getDisplayName() + "'");
         }
 
         // ULTRA SIMPLE PERKS HANDLING - Try multiple title variations
         if (title.contains("Perks") || cleanTitle.contains("Perks") || title.equals("Perks") || cleanTitle.equals("Perks")) {
-            plugin.getLogger().info("PERKS GUI DETECTED!");
+
             event.setCancelled(true); // FORCE cancel - no item manipulation allowed
 
             // If clicked on empty slot or air, do nothing
             if (clickedItem == null || clickedItem.getType() == Material.AIR) {
-                plugin.getLogger().info("Clicked on empty slot or air - returning");
                 return;
             }
 
             if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
-                plugin.getLogger().info("Item has no meta or display name - returning");
                 return;
             }
 
             String perksItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
-            plugin.getLogger().info("Processing perk item: '" + perksItemName + "'");
 
             // Handle info item clicks (do nothing)
             if (perksItemName.contains("Information") || perksItemName.contains("Perks Information")) {
-                plugin.getLogger().info("Clicked on info item - returning");
                 return;
             }
 

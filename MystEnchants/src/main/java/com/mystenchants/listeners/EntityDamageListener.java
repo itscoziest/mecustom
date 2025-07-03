@@ -4,6 +4,7 @@ import com.mystenchants.MystEnchants;
 import com.mystenchants.enchants.CustomEnchant;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -46,19 +47,23 @@ public class EntityDamageListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player)) return;
+        // FIX: Immediately stop processing if the event was cancelled by another plugin (like WorldGuard).
+        if (event.isCancelled()) {
+            return;
+        }
+
+        if (!(event.getDamager() instanceof Player)) {
+            return;
+        }
 
         Player attacker = (Player) event.getDamager();
         ItemStack weapon = attacker.getInventory().getItemInMainHand();
 
-        // FIXED: Check for specific weapon enchants
-
         // Check for Serrate enchant
         if (plugin.getEnchantManager().hasSpecificCustomEnchant(weapon, "serrate")) {
             int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(weapon, "serrate");
-            plugin.getLogger().info("SERRATE ENCHANT DETECTED! Level: " + level + " on " + weapon.getType());
             handleSerrate(event, level);
         }
 
@@ -66,11 +71,8 @@ public class EntityDamageListener implements Listener {
         ItemStack leggings = attacker.getInventory().getLeggings();
         if (leggings != null && plugin.getEnchantManager().hasSpecificCustomEnchant(leggings, "pantsed")) {
             int level = plugin.getEnchantManager().getSpecificCustomEnchantLevel(leggings, "pantsed");
-            plugin.getLogger().info("PANTSED ENCHANT DETECTED! Level: " + level + " on " + leggings.getType());
             handlePantsed(event, level, attacker);
         }
-
-        // Add more weapon enchant checks here
     }
 
     private void handleRejuvenate(Player player, int level, EntityDamageEvent event) {

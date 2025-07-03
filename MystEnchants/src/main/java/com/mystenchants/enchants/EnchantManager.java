@@ -349,7 +349,7 @@ public class EnchantManager {
     }
 
     /**
-     * NEW: Remove a specific enchant by name while keeping others
+     * CLEAN: Remove a specific enchant by name while keeping others
      */
     public ItemStack removeSpecificEnchantByName(ItemStack item, String enchantName) {
         if (item == null || !item.hasItemMeta()) return item;
@@ -362,7 +362,6 @@ public class EnchantManager {
 
         if (container.has(specificKey, PersistentDataType.INTEGER)) {
             container.remove(specificKey);
-            plugin.getLogger().info("Removed enchant data for: " + enchantName);
 
             // Update the lore to reflect all remaining enchants
             result = updateItemLoreWithAllEnchantsFixed(result);
@@ -375,7 +374,6 @@ public class EnchantManager {
                 if (meta.hasEnchant(Enchantment.LUCK)) {
                     meta.removeEnchant(Enchantment.LUCK);
                 }
-                plugin.getLogger().info("Removed last enchant - cleared all enchant data");
             } else {
                 String firstRemaining = remainingEnchants.keySet().iterator().next();
                 int firstLevel = remainingEnchants.get(firstRemaining);
@@ -389,17 +387,17 @@ public class EnchantManager {
         return result;
     }
 
+
+
     /**
-     * COMPLETELY REWRITTEN: Apply enchant supporting multiple enchants
+     * FINAL WORKING VERSION: Clean version without debug logs
      */
     public ItemStack applyEnchant(ItemStack item, CustomEnchant enchant, int level) {
         if (item == null || enchant == null || level <= 0 || level > enchant.getMaxLevel()) {
-            plugin.getLogger().warning("Invalid parameters for applyEnchant");
             return item;
         }
 
         if (!enchant.isApplicableTo(item.getType())) {
-            plugin.getLogger().warning("Enchant " + enchant.getName() + " not applicable to " + item.getType());
             return item;
         }
 
@@ -407,37 +405,41 @@ public class EnchantManager {
             ItemStack result = item.clone();
             ItemMeta meta = result.getItemMeta();
             if (meta == null) {
-                plugin.getLogger().warning("Item meta is null");
                 return item;
             }
 
+            // Add custom enchant data to persistent container
             PersistentDataContainer container = meta.getPersistentDataContainer();
-
-            plugin.getLogger().info("=== APPLYING ENCHANT DEBUG ===");
-            plugin.getLogger().info("Applying: " + enchant.getName() + " Level " + level);
-
-            // Store this specific enchant with its level
             NamespacedKey specificEnchantKey = new NamespacedKey(plugin, "enchant_" + enchant.getName());
             container.set(specificEnchantKey, PersistentDataType.INTEGER, level);
-            plugin.getLogger().info("Stored in container: enchant_" + enchant.getName() + " = " + level);
-
-            // Store in old format for backwards compatibility
             container.set(enchantKey, PersistentDataType.STRING, enchant.getName());
             container.set(levelKey, PersistentDataType.INTEGER, level);
-            plugin.getLogger().info("Stored in old format: " + enchant.getName() + " Level " + level);
 
-            // Update meta first
+            // Add custom enchant to lore
+            List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+
+            // Remove only our previous custom enchant lines
+            final String customEnchantPrefix = ColorUtils.color("&d&l");
+            lore.removeIf(line -> line != null && line.startsWith(customEnchantPrefix));
+
+            // Add our custom enchant line at the top
+            String enchantLine = customEnchantPrefix + enchant.getDisplayName() + " " + getRomanNumeral(level);
+            lore.add(0, enchantLine);
+            meta.setLore(lore);
+
+            // Apply the meta changes
             result.setItemMeta(meta);
 
-            // Update the lore
-            result = updateItemLoreWithAllEnchantsFixed(result);
-
-            // Add glow
-            meta = result.getItemMeta();
-            meta.addEnchant(Enchantment.LUCK, 1, true);
-            result.setItemMeta(meta);
-
-            plugin.getLogger().info("=== ENCHANT APPLICATION COMPLETE ===");
+            // Add glow effect for first custom enchant
+            boolean isFirstEnchant = getAllCustomEnchants(item).isEmpty();
+            if (isFirstEnchant) {
+                result.addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.LUCK, 1);
+                ItemMeta glowMeta = result.getItemMeta();
+                if (glowMeta != null) {
+                    glowMeta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+                    result.setItemMeta(glowMeta);
+                }
+            }
 
             return result;
 
@@ -448,24 +450,102 @@ public class EnchantManager {
         }
     }
 
+
+
+
     /**
-     * NEW: Better lore update method
+     * COMPLETELY FIXED: Updates item display for multiple enchants without affecting vanilla enchants
+     */
+    private void updateItemDisplaySafe(ItemMeta meta, CustomEnchant enchant, int level) {
+        // Save ALL current enchantments (both vanilla and custom) before updating lore
+        Map<org.bukkit.enchantments.Enchantment, Integer> allCurrentEnchants = new HashMap<>(meta.getEnchants());
+        plugin.getLogger().info("Saving all enchants before lore update: " + allCurrentEnchants);
+
+        // STEP 1: Set the specific enchant data first
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        NamespacedKey specificEnchantKey = new NamespacedKey(plugin, "enchant_" + enchant.getName());
+        container.set(specificEnchantKey, PersistentDataType.INTEGER, level);
+
+        // STEP 2: Update lore to show ALL enchants (not just the new one)
+        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+
+        // Remove ALL existing custom enchant lore lines
+        final String enchantLinePrefix = ColorUtils.color("&d&l");
+        Set<String> knownEnchantNames = new HashSet<>();
+        for (CustomEnchant knownEnchant : getAllEnchants()) {
+            knownEnchantNames.add(ColorUtils.stripColor(knownEnchant.getDisplayName()));
+        }
+
+        lore.removeIf(line -> {
+            if (line == null) return false;
+
+            // Remove lines that start with our enchant prefix
+            if (line.startsWith(enchantLinePrefix)) {
+                return true;
+            }
+
+            // Remove lines containing known enchant names
+            String strippedLine = ColorUtils.stripColor(line);
+            for (String enchantName : knownEnchantNames) {
+                if (strippedLine.matches(".*\\b" + java.util.regex.Pattern.quote(enchantName) + "\\b.*")) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        // STEP 3: Get ALL custom enchants on the item (including the one we just added)
+        // We need to temporarily apply the meta to get the updated enchant data
+        ItemStack tempItem = new ItemStack(org.bukkit.Material.STONE); // Temporary item for data extraction
+        tempItem.setItemMeta(meta);
+        Map<String, Integer> allCustomEnchants = getAllCustomEnchants(tempItem);
+
+        // STEP 4: Add ALL custom enchants back to lore
+        List<Map.Entry<String, Integer>> sortedEnchants = allCustomEnchants.entrySet().stream()
+                .sorted(Comparator.comparing(e -> {
+                    CustomEnchant enchantObj = getEnchant(e.getKey());
+                    return enchantObj != null ? enchantObj.getTier() : EnchantTier.COMMON;
+                }))
+                .collect(Collectors.toList());
+
+        int insertPosition = 0;
+        for (Map.Entry<String, Integer> entry : sortedEnchants) {
+            CustomEnchant enchantObj = getEnchant(entry.getKey());
+            if (enchantObj != null) {
+                String enchantLine = enchantLinePrefix + enchantObj.getDisplayName() + " " + getRomanNumeral(entry.getValue());
+                lore.add(insertPosition++, enchantLine);
+                plugin.getLogger().info("Added enchant line to lore: " + enchantLine);
+            }
+        }
+
+        // STEP 5: Set the updated lore
+        meta.setLore(lore);
+
+        // STEP 6: CRITICAL - Restore ALL enchantments that might have been lost
+        for (Map.Entry<org.bukkit.enchantments.Enchantment, Integer> entry : allCurrentEnchants.entrySet()) {
+            if (!meta.hasEnchant(entry.getKey()) || meta.getEnchantLevel(entry.getKey()) != entry.getValue()) {
+                meta.addEnchant(entry.getKey(), entry.getValue(), true);
+                plugin.getLogger().info("Re-restored enchant after lore update: " + entry.getKey() + " Level " + entry.getValue());
+            }
+        }
+
+        plugin.getLogger().info("Final enchants after lore update: " + meta.getEnchants());
+    }
+
+
+    /**
+     * CLEAN: Better lore update method
      */
     private ItemStack updateItemLoreWithAllEnchantsFixed(ItemStack item) {
         try {
             ItemMeta meta = item.getItemMeta();
             if (meta == null) {
-                plugin.getLogger().warning("Meta is null in lore update");
                 return item;
             }
 
-            plugin.getLogger().info("=== LORE UPDATE DEBUG ===");
-
             List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-            plugin.getLogger().info("Current lore size: " + lore.size());
 
-            // Remove ALL existing enchant lines
-            int removedCount = 0;
+            // Remove old custom enchant lines
             Iterator<String> iterator = lore.iterator();
             while (iterator.hasNext()) {
                 String line = iterator.next();
@@ -477,7 +557,6 @@ public class EnchantManager {
                 for (CustomEnchant enchant : getAllEnchants()) {
                     String enchantName = stripColorCodes(enchant.getDisplayName()).toLowerCase();
                     if (strippedLine.contains(enchantName)) {
-                        plugin.getLogger().info("Removing enchant lore: " + line);
                         shouldRemove = true;
                         break;
                     }
@@ -485,20 +564,16 @@ public class EnchantManager {
 
                 if (!shouldRemove && strippedLine.matches(".*\\b(i{1,3}|iv|v|vi{1,3}|ix|x)\\b.*") &&
                         (line.contains("§") || line.contains("&"))) {
-                    plugin.getLogger().info("Removing potential enchant lore: " + line);
                     shouldRemove = true;
                 }
 
                 if (shouldRemove) {
                     iterator.remove();
-                    removedCount++;
                 }
             }
-            plugin.getLogger().info("Removed " + removedCount + " old enchant lines");
 
             // Get all enchants and add them to lore
             Map<String, Integer> allEnchants = getAllCustomEnchants(item);
-            plugin.getLogger().info("Found " + allEnchants.size() + " enchants");
 
             // Sort enchants by tier
             List<Map.Entry<String, Integer>> sortedEnchants = allEnchants.entrySet().stream()
@@ -521,15 +596,11 @@ public class EnchantManager {
                             getRomanNumeral(entry.getValue()));
                     lore.add(insertPosition, enchantLine);
                     insertPosition++;
-                    plugin.getLogger().info("Added enchant lore: " + enchantLine);
                 }
             }
 
             meta.setLore(lore);
             item.setItemMeta(meta);
-
-            plugin.getLogger().info("Updated lore with " + allEnchants.size() + " enchants");
-            plugin.getLogger().info("=== LORE UPDATE COMPLETE ===");
 
             return item;
 
@@ -605,7 +676,7 @@ public class EnchantManager {
     }
 
     /**
-     * OLD: Removes a custom enchant from an item (updated)
+     * CLEAN: Remove all custom enchants from an item
      */
     public ItemStack removeEnchant(ItemStack item) {
         if (!hasCustomEnchant(item)) return item;

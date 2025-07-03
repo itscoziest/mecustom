@@ -33,7 +33,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 
 /**
- * Handles GUI interactions
+ * Handles GUI interactions - FIXED PERKS GUI PROTECTION
  */
 public class InventoryClickListener implements Listener {
 
@@ -54,12 +54,159 @@ public class InventoryClickListener implements Listener {
         String title = player.getOpenInventory().getTitle();
         String cleanTitle = ChatColor.stripColor(title);
 
-// NULL CHECK - Prevent the error you're seeing
+        // NULL CHECK - Prevent the error you're seeing
         if (clickedInventory == null) {
             return;
         }
 
-// Debug GUI title
+        // EMERGENCY DEBUG: Log ALL clicks to see what's happening
+        plugin.getLogger().info("=== CLICK DEBUG ===");
+        plugin.getLogger().info("Title: '" + title + "'");
+        plugin.getLogger().info("Clean title: '" + cleanTitle + "'");
+        plugin.getLogger().info("Clicked item: " + (clickedItem != null ? clickedItem.getType() : "NULL"));
+        if (clickedItem != null && clickedItem.hasItemMeta() && clickedItem.getItemMeta().getDisplayName() != null) {
+            plugin.getLogger().info("Item name: '" + clickedItem.getItemMeta().getDisplayName() + "'");
+        }
+
+        // ULTRA SIMPLE PERKS HANDLING - Try multiple title variations
+        if (title.contains("Perks") || cleanTitle.contains("Perks") || title.equals("Perks") || cleanTitle.equals("Perks")) {
+            plugin.getLogger().info("PERKS GUI DETECTED!");
+            event.setCancelled(true); // FORCE cancel - no item manipulation allowed
+
+            // If clicked on empty slot or air, do nothing
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                plugin.getLogger().info("Clicked on empty slot or air - returning");
+                return;
+            }
+
+            if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
+                plugin.getLogger().info("Item has no meta or display name - returning");
+                return;
+            }
+
+            String perksItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+            plugin.getLogger().info("Processing perk item: '" + perksItemName + "'");
+
+            // Handle info item clicks (do nothing)
+            if (perksItemName.contains("Information") || perksItemName.contains("Perks Information")) {
+                plugin.getLogger().info("Clicked on info item - returning");
+                return;
+            }
+
+            // DIRECT PURCHASE ATTEMPT - No complex logic
+            String perkName = null;
+
+            // Simple mapping based on what I can see in your GUI
+            Material itemType = clickedItem.getType();
+            switch (itemType) {
+                case SNOWBALL:
+                    perkName = "teleport-snowball";
+                    break;
+                case FISHING_ROD:
+                    perkName = "grappling-hook";
+                    break;
+                case PUMPKIN:
+                case CARVED_PUMPKIN:
+                case JACK_O_LANTERN:
+                    perkName = "snowman-egg";
+                    break;
+                case BLAZE_ROD:
+                case STICK:
+                    perkName = "spellbreaker";
+                    break;
+                case EGG:
+                    perkName = "tradeoff-egg";
+                    break;
+                case WITCH_SPAWN_EGG:
+                    perkName = "worthy-sacrifice";
+                    break;
+                case ROSE_BUSH:
+                case POPPY:
+                case DANDELION:
+                    perkName = "lovestruck";
+                    break;
+                default:
+                    // Try name-based mapping as fallback
+                    if (perksItemName.toLowerCase().contains("teleport") && perksItemName.toLowerCase().contains("snowball")) {
+                        perkName = "teleport-snowball";
+                    } else if (perksItemName.toLowerCase().contains("grappling") && perksItemName.toLowerCase().contains("hook")) {
+                        perkName = "grappling-hook";
+                    } else if (perksItemName.toLowerCase().contains("snowman") && perksItemName.toLowerCase().contains("egg")) {
+                        perkName = "snowman-egg";
+                    } else if (perksItemName.toLowerCase().contains("spellbreaker")) {
+                        perkName = "spellbreaker";
+                    } else if (perksItemName.toLowerCase().contains("tradeoff") && perksItemName.toLowerCase().contains("egg")) {
+                        perkName = "tradeoff-egg";
+                    } else if (perksItemName.toLowerCase().contains("worthy") && perksItemName.toLowerCase().contains("sacrifice")) {
+                        perkName = "worthy-sacrifice";
+                    } else if (perksItemName.toLowerCase().contains("lovestruck")) {
+                        perkName = "lovestruck";
+                    }
+                    break;
+            }
+
+            final String finalPerkName = perkName; // Make it final for lambda
+
+            if (finalPerkName != null) {
+                plugin.getLogger().info("ATTEMPTING TO PURCHASE PERK: " + finalPerkName);
+
+                // ADDED: Check if perk exists and show cost
+                if (plugin.getPerkManager().getPerk(finalPerkName) == null) {
+                    plugin.getLogger().warning("PERK NOT FOUND IN PERKMANAGER: " + finalPerkName);
+                    player.sendMessage(ColorUtils.color("&cPerk not found: " + finalPerkName));
+                    return;
+                }
+
+                int cost = plugin.getPerkManager().getPerk(finalPerkName).getCost();
+                plugin.getLogger().info("PERK COST: " + cost);
+
+                // Send immediate feedback to player
+                player.sendMessage(ColorUtils.color("&7Attempting to purchase " + finalPerkName + "..."));
+
+                // Try purchase
+                try {
+                    plugin.getPerkManager().purchasePerk(player, finalPerkName)
+                            .thenAccept(success -> {
+                                plugin.getLogger().info("PURCHASE RESULT: " + success);
+                                if (success) {
+                                    player.sendMessage(ColorUtils.color("&a&lPERK PURCHASED! &7" + finalPerkName));
+                                    // Refresh GUI
+                                    plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                        player.openInventory(plugin.getGuiManager().createPerksGui(player));
+                                    });
+                                } else {
+                                    player.sendMessage(ColorUtils.color("&cPurchase failed for " + finalPerkName + " - check console for why"));
+                                }
+                            })
+                            .exceptionally(throwable -> {
+                                plugin.getLogger().warning("PURCHASE ERROR: " + throwable.getMessage());
+                                throwable.printStackTrace();
+                                player.sendMessage(ColorUtils.color("&cError purchasing perk: " + throwable.getMessage()));
+                                return null;
+                            });
+                } catch (Exception e) {
+                    plugin.getLogger().warning("PURCHASE EXCEPTION: " + e.getMessage());
+                    e.printStackTrace();
+                    player.sendMessage(ColorUtils.color("&cException purchasing perk: " + e.getMessage()));
+                }
+            } else {
+                plugin.getLogger().warning("COULD NOT IDENTIFY PERK: " + perksItemName + " (Material: " + itemType + ")");
+                player.sendMessage(ColorUtils.color("&cCould not identify perk: " + perksItemName));
+            }
+
+            plugin.getLogger().info("=== END PERKS PROCESSING ===");
+            return; // CRITICAL: Stop processing here for Perks GUI
+        }
+
+        // CRITICAL FIX: Check if this is ANY OTHER GUI inventory and cancel ALL events
+        if (isGuiInventory(cleanTitle)) {
+            event.setCancelled(true); // ALWAYS cancel for ALL GUI interactions
+
+            // Only process clicks if there's actually an item to click
+            if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+                return;
+            }
+        }
 
         // Handle Oracle GUI clicks FIRST - BEFORE drag/drop system
         if (cleanTitle.equals("Oracle")) {
@@ -103,7 +250,7 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-// Handle Oracle Purchase GUI clicks - THIS IS THE MISSING PART
+        // Handle Oracle Purchase GUI clicks - THIS IS THE MISSING PART
         if (cleanTitle.equals("Purchase Upgrades")) {
             event.setCancelled(true); // Prevent ALL item manipulation
 
@@ -150,7 +297,6 @@ public class InventoryClickListener implements Listener {
                             expCost = 50; // Default cost
                         }
 
-
                         // Check if player has enough EXP
                         if (player.getLevel() < expCost) {
                             player.sendMessage(ColorUtils.color("&cYou need " + expCost + " EXP levels! You have " + player.getLevel()));
@@ -189,45 +335,6 @@ public class InventoryClickListener implements Listener {
             if (!upgradeFound) {
             }
 
-            // Handle Oracle GUI clicks
-            if (cleanTitle.equals("Oracle")) {
-                plugin.getLogger().info("Found Oracle GUI - handling clicks");
-                event.setCancelled(true); // Prevent ALL item manipulation in Oracle
-
-                // If clicked on empty slot or air, do nothing
-                if (clickedItem == null || clickedItem.getType() == Material.AIR) {
-                    plugin.getLogger().info("Clicked on empty slot in Oracle - ignoring");
-                    return;
-                }
-
-                if (!clickedItem.hasItemMeta() || clickedItem.getItemMeta().getDisplayName() == null) {
-                    plugin.getLogger().info("Clicked item has no meta or name in Oracle - ignoring");
-                    return;
-                }
-
-                String oracleItemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
-                plugin.getLogger().info("Clicked Oracle item: '" + oracleItemName + "'");
-
-                // Handle Purchase Upgrades button (EXP bottle)
-                if (oracleItemName.contains("Purchase Upgrades")) {
-                    player.openInventory(plugin.getGuiManager().createOraclePurchaseGui(player));
-                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-                    return;
-                }
-
-                // Handle enchant clicks (open details)
-                for (CustomEnchant enchant : plugin.getEnchantManager().getAllEnchants()) {
-                    if (oracleItemName.contains(enchant.getDisplayName())) {
-                        player.openInventory(plugin.getGuiManager().createOracleDetailsGui(player, enchant));
-                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-                        return;
-                    }
-                }
-
-                plugin.getLogger().info("Oracle GUI click handled - not a functional item");
-                return; // Don't process any other handlers for Oracle GUI
-            }
-
             // Handle back button
             if (purchaseItemName.contains("Back")) {
                 player.openInventory(plugin.getGuiManager().createOracleGui(player));
@@ -238,11 +345,10 @@ public class InventoryClickListener implements Listener {
             return; // Don't process any other handlers for Purchase GUI
         }
 
-// Add null check for the rest of your existing code
+        // Add null check for the rest of your existing code
         if (clickedItem == null) {
             return;
         }
-
 
         if (cleanTitle.equals("Enchants")) {
             event.setCancelled(true); // Prevent item manipulation
@@ -293,7 +399,7 @@ public class InventoryClickListener implements Listener {
             return; // Don't process other handlers for Enchants GUI
         }
 
-// Handle Tier View GUI clicks (back button)
+        // Handle Tier View GUI clicks (back button)
         if (cleanTitle.contains("Enchants") && !cleanTitle.equals("Enchants")) {
             event.setCancelled(true);
 
@@ -317,8 +423,6 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-// ... rest of your existing InventoryClickListener code goes here
-
         // ADD THIS FOR SOUL SHOP
         if (title.equals("Soul Shop") || title.contains("Soul Shop")) {
             event.setCancelled(true);
@@ -341,8 +445,6 @@ public class InventoryClickListener implements Listener {
                 }
             }
         }
-
-
 
         ItemMeta meta = clickedItem.getItemMeta();
         String itemName = ChatColor.stripColor(meta.getDisplayName());
@@ -441,17 +543,11 @@ public class InventoryClickListener implements Listener {
         } else if (title.contains("Soul Shop")) {
             event.setCancelled(true); // CRITICAL: Always cancel for soul shop
             handleSoulShopGui(player, itemName, clickedItem);
-        } else if (title.equals("Perks")) {
-            event.setCancelled(true);
-            handlePerksGui(player, itemName, clickedItem);
         } else if (title.equals("Redemption Boss Fight")) {
             event.setCancelled(true);
             handleRedemptionGui(player, itemName);
         }
     }
-
-
-
 
     /**
      * Helper method to check if an inventory title is a GUI
@@ -615,7 +711,6 @@ public class InventoryClickListener implements Listener {
         }
     }
 
-
     /**
      * COMPLETE: Handle soul shop purchases
      */
@@ -709,7 +804,6 @@ public class InventoryClickListener implements Listener {
         plugin.getLogger().info("Player " + player.getName() + " purchased " + enchantName + " Level " + level + " for " + cost + " souls");
     }
 
-
     private void handleSoulShopGui(Player player, String itemName, ItemStack clickedItem) {
         // Handle page navigation FIRST
         if (itemName.equals("Next Page") || itemName.contains("Next Page")) {
@@ -729,12 +823,9 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-
-
         // ADD THIS DEBUG SECTION:
         if (clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) {
             String displayName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
-
 
             // Check if this is a glass pane or filler item
             if (displayName.trim().isEmpty() || displayName.equals(" ")) {
@@ -867,44 +958,70 @@ public class InventoryClickListener implements Listener {
         }
     }
 
+    /**
+     * FIXED: Perks GUI handler with proper item checking and purchase handling
+     */
     private void handlePerksGui(Player player, String itemName, ItemStack clickedItem) {
-        // Check if this is an info item or non-purchasable item
-        if (itemName.contains("Information") || clickedItem.getType() == Material.BLACK_STAINED_GLASS_PANE) {
-            return; // Ignore info items and glass panes
-        }
+        // Get perk name
+        String perkName = getPerkNameFromDisplayName(itemName);
 
-        // FIXED: Check if this is a perk shop item using the PerkManager
-        if (!plugin.getPerkManager().isPerkShopItem(clickedItem)) {
-            return; // Not a shop item, ignore
-        }
-
-        String perkName = plugin.getPerkManager().getPerkNameFromShopItem(clickedItem);
         if (perkName != null) {
-            plugin.getLogger().info("Player " + player.getName() + " attempting to purchase perk: " + perkName);
+            plugin.getLogger().info("Purchasing perk: " + perkName);
 
-            // Purchase the perk asynchronously
             plugin.getPerkManager().purchasePerk(player, perkName)
                     .thenAccept(success -> {
                         if (success) {
-                            plugin.getLogger().info("Perk purchase successful for " + player.getName() + ": " + perkName);
-
-                            // Refresh the GUI on the main thread
+                            player.sendMessage(ColorUtils.color("&a&lPERK PURCHASED! &7" + perkName));
                             plugin.getServer().getScheduler().runTask(plugin, () -> {
                                 player.openInventory(plugin.getGuiManager().createPerksGui(player));
                             });
                         } else {
-                            plugin.getLogger().info("Perk purchase failed for " + player.getName() + ": " + perkName);
+                            player.sendMessage(ColorUtils.color("&cPurchase failed for " + perkName));
                         }
-                    })
-                    .exceptionally(throwable -> {
-                        plugin.getLogger().warning("Error purchasing perk " + perkName + " for " + player.getName() + ": " + throwable.getMessage());
-                        player.sendMessage(ColorUtils.color("&cError purchasing perk: " + throwable.getMessage()));
-                        return null;
                     });
         } else {
-            plugin.getLogger().warning("Could not extract perk name from clicked item: " + itemName);
-            player.sendMessage(ColorUtils.color("&cError: Could not identify perk item"));
+            player.sendMessage(ColorUtils.color("&cCould not identify perk: " + itemName));
         }
+    }
+
+    private String getPerkNameFromDisplayName(String displayName) {
+        String lowerName = displayName.toLowerCase();
+
+        if (lowerName.contains("teleport") && lowerName.contains("snowball")) {
+            return "teleport-snowball";
+        } else if (lowerName.contains("grappling") && lowerName.contains("hook")) {
+            return "grappling-hook";
+        } else if (lowerName.contains("snowman") && lowerName.contains("egg")) {
+            return "snowman-egg";
+        } else if (lowerName.contains("spellbreaker")) {
+            return "spellbreaker";
+        } else if (lowerName.contains("tradeoff") && lowerName.contains("egg")) {
+            return "tradeoff-egg";
+        } else if (lowerName.contains("worthy") && lowerName.contains("sacrifice")) {
+            return "worthy-sacrifice";
+        } else if (lowerName.contains("lovestruck")) {
+            return "lovestruck";
+        }
+
+        return null;
+    }
+
+    /**
+     * Helper method for emergency perk matching
+     */
+    private String findEmergencyPerkMatch(String itemName) {
+        String[] allPerkNames = {
+                "teleport-snowball", "grappling-hook", "snowman-egg",
+                "spellbreaker", "tradeoff-egg", "worthy-sacrifice", "lovestruck"
+        };
+
+        for (String testPerk : allPerkNames) {
+            if (itemName.toLowerCase().contains(testPerk.replace("-", " ").replace("_", " "))) {
+                return testPerk;
+            }
+        }
+
+        return null;
     }
 
     private void handleRedemptionGui(Player player, String itemName) {
@@ -951,11 +1068,32 @@ public class InventoryClickListener implements Listener {
                 });
     }
 
-
-
     /**
-     * FIXED: Purchase method with comprehensive requirement checking
+     * Helper method to determine perk name from display name - ADDED THIS METHOD
      */
+    private String determinePerkName(String itemName) {
+        String lowerName = itemName.toLowerCase();
+
+        // Map display names to internal perk names
+        if (lowerName.contains("teleport") && lowerName.contains("snowball")) {
+            return "teleport-snowball";
+        } else if (lowerName.contains("grappling") && lowerName.contains("hook")) {
+            return "grappling-hook";
+        } else if (lowerName.contains("snowman") && lowerName.contains("egg")) {
+            return "snowman-egg";
+        } else if (lowerName.contains("spellbreaker")) {
+            return "spellbreaker";
+        } else if (lowerName.contains("tradeoff") && lowerName.contains("egg")) {
+            return "tradeoff-egg";
+        } else if (lowerName.contains("worthy") && lowerName.contains("sacrifice")) {
+            return "worthy-sacrifice";
+        } else if (lowerName.contains("lovestruck")) {
+            return "lovestruck";
+        }
+
+        return null;
+    }
+
     private void purchaseEnchantBookFixed(Player player, CustomEnchant enchant, int level, ItemStack clickedItem) {
         // Get cost for the specific level
         String costPath = "shop.items." + enchant.getName() + "-book-level-" + level + ".cost";

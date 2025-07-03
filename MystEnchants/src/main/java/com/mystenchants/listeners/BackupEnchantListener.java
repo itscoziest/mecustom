@@ -140,11 +140,74 @@ public class BackupEnchantListener implements Listener {
         golem.setRemoveWhenFarAway(false);
         golem.setPersistent(true);
 
-        // Make it player-created so it won't attack players by default
-        golem.setPlayerCreated(true);
+        // DON'T set player-created to true - this prevents it from attacking players
+        // golem.setPlayerCreated(true);
 
-        // Clear any initial target
-        golem.setTarget(null);
+        // CRITICAL FIX: Make the golem aggressive immediately
+        // Find the nearest enemy player and make the golem target them
+        Player nearestEnemy = findNearestEnemyPlayer(owner, 16.0); // 16 block radius
+        if (nearestEnemy != null) {
+            // Use scheduler to set target after spawn to ensure it works
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    golem.setTarget(nearestEnemy);
+                    // Damage the golem slightly to make it aggressive (vanilla mechanic)
+                    golem.damage(0.1);
+                }
+            }.runTaskLater(plugin, 2L);
+
+        } else {
+            // If no enemy found, make the golem patrol around the owner
+            plugin.getLogger().info("No enemy players found, golem will patrol");
+        }
+
+        // Schedule a task to find targets every few seconds
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (golem.isDead() || !golem.isValid()) {
+                    this.cancel();
+                    return;
+                }
+
+                // If golem has no target, find one
+                if (golem.getTarget() == null) {
+                    Player enemy = findNearestEnemyPlayer(owner, 20.0);
+                    if (enemy != null && !enemy.equals(owner)) {
+                        golem.setTarget(enemy);
+                        // Damage slightly to trigger aggressive behavior
+                        golem.damage(0.1);
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 20L, 40L); // Check every 2 seconds
+
+        // Clear any initial target to owner
+        if (golem.getTarget() != null && golem.getTarget().equals(owner)) {
+            golem.setTarget(null);
+        }
+    }
+
+    /**
+     * Finds the nearest enemy player (not the owner) within range
+     */
+    private Player findNearestEnemyPlayer(Player owner, double range) {
+        Player nearest = null;
+        double nearestDistance = range;
+
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            if (player.equals(owner)) continue; // Skip the owner
+            if (!player.getWorld().equals(owner.getWorld())) continue; // Same world only
+
+            double distance = player.getLocation().distance(owner.getLocation());
+            if (distance <= range && distance < nearestDistance) {
+                nearest = player;
+                nearestDistance = distance;
+            }
+        }
+
+        return nearest;
     }
 
     private Location findSafeSpawnLocation(Location original) {
@@ -167,16 +230,47 @@ public class BackupEnchantListener implements Listener {
     @EventHandler
     public void onEntityTarget(EntityTargetEvent event) {
         if (!(event.getEntity() instanceof IronGolem)) return;
-        if (!(event.getTarget() instanceof Player)) return;
 
         IronGolem golem = (IronGolem) event.getEntity();
-        Player target = (Player) event.getTarget();
-
         UUID ownerUUID = golemOwners.get(golem.getUniqueId());
-        if (ownerUUID != null && target.getUniqueId().equals(ownerUUID)) {
-            // Prevent golem from targeting its owner
-            event.setCancelled(true);
-            golem.setTarget(null);
+
+        if (ownerUUID == null) return; // Not one of our backup golems
+
+        if (event.getTarget() instanceof Player) {
+            Player target = (Player) event.getTarget();
+
+            // ONLY prevent golem from targeting its owner, allow targeting other players
+            if (target.getUniqueId().equals(ownerUUID)) {
+                event.setCancelled(true);
+                golem.setTarget(null);
+
+                // Instead, find another player to target
+                Player owner = plugin.getServer().getPlayer(ownerUUID);
+                if (owner != null) {
+                    Player enemy = findNearestEnemyPlayer(owner, 20.0);
+                    if (enemy != null) {
+                        // Use scheduler to set target after event
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                golem.setTarget(enemy);
+                                // Damage slightly to make aggressive
+                                golem.damage(0.1);
+                            }
+                        }.runTaskLater(plugin, 1L);
+                    }
+                }
+            } else {
+                // Allow targeting other players and trigger aggressive behavior
+                // Damage the golem slightly to make it aggressive (vanilla mechanic)
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        golem.damage(0.1);
+                    }
+                }.runTaskLater(plugin, 1L);
+                plugin.getLogger().info("Backup golem targeting enemy player: " + target.getName());
+            }
         }
     }
 

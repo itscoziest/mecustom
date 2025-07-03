@@ -259,7 +259,6 @@ public class EnchantManager {
             NamespacedKey specificKey = new NamespacedKey(plugin, "enchant_" + enchantName);
 
             int level = container.getOrDefault(specificKey, PersistentDataType.INTEGER, 0);
-            plugin.getLogger().info("Level of " + enchantName + ": " + level);
             return level;
         } catch (Exception e) {
             plugin.getLogger().warning("Error getting level for " + enchantName + ": " + e.getMessage());
@@ -310,17 +309,13 @@ public class EnchantManager {
                     if (container.has(specificKey, PersistentDataType.INTEGER)) {
                         int level = container.get(specificKey, PersistentDataType.INTEGER);
                         enchants.put(enchant.getName(), level);
-                        plugin.getLogger().info("Found enchant: " + enchant.getName() + " Level " + level);
                     }
                 } catch (Exception e) {
-                    plugin.getLogger().warning("Error checking enchant " + enchant.getName() + ": " + e.getMessage());
                 }
             }
 
-            plugin.getLogger().info("Total enchants found: " + enchants.size());
 
         } catch (Exception e) {
-            plugin.getLogger().warning("Error getting all enchants: " + e.getMessage());
         }
 
         return enchants;

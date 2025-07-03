@@ -1,3 +1,95 @@
+perks:
+  teleport-snowball:
+    display-name: "&b&lTeleport Snowball"
+    material: SNOWBALL
+    cost: 500
+    cooldown: 30
+    lore:
+      - "&7Teleport to the player you hit"
+      - "&7with this snowball"
+      - ""
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  grappling-hook:
+    display-name: "&a&lGrappling Hook"
+    material: FISHING_ROD
+    cost: 750
+    cooldown: 45
+    lore:
+      - "&7Hook onto players and pull"
+      - "&7them towards you"
+      - ""
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  snowman-egg:
+    display-name: "&f&lSnowman Egg"
+    material: PUMPKIN
+    cost: 600
+    cooldown: 60
+    lore:
+      - "&7Spawns a snowman that attacks"
+      - "&7enemies for 30 seconds"
+      - ""
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  spellbreaker:
+    display-name: "&6&lSpellbreaker"
+    material: BLAZE_ROD
+    cost: 800
+    cooldown: 60
+    lore:
+      - "&7Hit a player 5 times to remove"
+      - "&7their potion effects"
+      - ""
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  tradeoff-egg:
+    display-name: "&e&lTradeoff Egg"
+    material: EGG
+    cost: 900
+    cooldown: 120
+    lore:
+      - "&7Switch potion effects with"
+      - "&7target for 10 seconds"
+      - ""
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  worthy-sacrifice:
+    display-name: "&5&lWorthy Sacrifice"
+    material: WITCH_SPAWN_EGG
+    cost: 1200
+    cooldown: 180
+    lore:
+      - "&7Spawns a witch that absorbs"
+      - "&7damage for you"
+      - ""
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
+  lovestruck:
+    display-name: "&d&lLovestruck"
+    material: ROSE_BUSH
+    cost: 700
+    cooldown: 90
+    lore:
+      - "&7Hit a player 5 times to give"
+      - "&7nausea and rose inventory"
+      - ""
+      - "&7Cost: &6{cost} souls"
+      - ""
+      - "&eClick to purchase!"
+
 shop:
   souls-per-kill: 1
   souls-per-player-kill: 5

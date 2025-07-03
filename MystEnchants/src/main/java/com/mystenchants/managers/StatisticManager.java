@@ -260,6 +260,14 @@ public class StatisticManager {
      * Send milestone notification with configurable message and effects
      */
     private void sendMilestoneNotification(Player player, String enchantName, int level, int percentage, long current, long required) {
+        // Create a unique identifier to prevent spam
+        String milestoneKey = player.getUniqueId().toString() + ":" + enchantName + ":" + level + ":" + percentage;
+
+        // If this notification was already sent, do nothing.
+        if (notifiedMilestones.contains(milestoneKey)) {
+            return;
+        }
+
         String message = plugin.getConfigManager().getString("statistics.yml",
                 "progress-display.milestone-message",
                 "&a&l[MystEnchants] &7You've reached &6{percentage}% &7progress on &6{enchant} &7level &6{level}&7!");
@@ -281,7 +289,13 @@ public class StatisticManager {
             // Invalid sound, use default
             player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
         }
+
+        // Mark this milestone as notified to prevent future spam
+        notifiedMilestones.add(milestoneKey);
     }
+
+    private final java.util.Set<String> notifiedMilestones = new java.util.HashSet<>();
+
 
     /**
      * Send completion notification when requirement is met
